@@ -28,9 +28,39 @@ import NuevoCliente from '../Paginas/Usuario2/nuevocliente';
 import Pagos2 from '../Paginas/Usuario2/pagos3';
 import Deudores from '../Paginas/Usuario2/deudores';
 
+import PagosInusuales from "../Paginas/Nivel3/PagosInusuales"
+import PagosInusualesMensuales from "../Paginas/Nivel3/PagosInusualesMensuales"
+import Principal from "../Paginas/Nivel3/Principal"
+import Icc from "../Paginas/Nivel3/Icc"
+import VerCliente from '../Paginas/Nivel3/verClientes';
+import Lotes3 from '../Paginas/Nivel3/lotes';
+import Aprobacion from '../Paginas/Nivel3/aprobacionPagos';
+import AgregarICC from '../Paginas/Nivel3/AgregarIcc';
+import Declaraciones from '../Paginas/Nivel3/Declaraciones';
+import Agregarusuario from '../Paginas/Nivel3/AgregarUsuario';
+import Pagos3 from '../Paginas/Nivel3/Pagos';
+import Clientesniv3 from '../Paginas/Nivel3/Clientes';
+import Novedades3 from '../Paginas/Nivel3/Novedades';
+import Extractp from '../Paginas/Nivel3/extracto';
+import Niv3Cuota from '../Paginas/Nivel3/cuota';
+import Niv3CuotaIc3 from '../Paginas/Nivel3/cuotaic3';
+
+import Resumenes from '../Paginas/Administracion/resumenes';
+import Resumenes2 from '../Paginas/Administracion/resumenes2';
+import Resumenes3 from '../Paginas/Administracion/resumenes3';
+import Carga1 from '../Paginas/Administracion/carga';
+ 
+
+
+
+
+
 import Navbar from "../components/Navbar";
 
 import Mapassegundaparte from '../Paginas/mapas'
+
+
+
 import NOtFound from '../Paginas/not found'
 
 /* 
@@ -177,6 +207,27 @@ const Rutas = [
 	{ path: '/usuario2/nuevocliente', element: <NuevoCliente /> },
 	{ path: '/usuario2/pagos', element: <Pagos2 /> },
 	{ path: '/usuario2/deudores', element: <Deudores /> },
+
+	{ path: '/nivel3/pagosinusuales', element: <PagosInusuales /> },
+	{ path: '/nivel3/clientes', element: <Clientesniv3 /> },
+	{ path: '/nivel3/pagosmensualesinusuales', element: <PagosInusualesMensuales /> },
+	{ path: '/nivel3/', element: <Principal /> },
+	{ path: '/nivel3/icc', element: <Icc /> },
+	{ path: '/nivel3/agregaricc', element: <AgregarICC /> },
+	{ path: '/nivel3/clientes', element: <VerCliente /> },
+	{ path: '/nivel3/lotes', element: <Lotes3 /> },
+	{ path: '/nivel3/aprobacionesdepagos', element: <Aprobacion /> },
+	{ path: '/nivel3/declaraciones', element: <Declaraciones /> },
+	{ path: '/nivel3/agregarusuario', element: <Agregarusuario /> },
+	{ path: '/nivel3/pagos', element: <Pagos3 /> },
+	{ path: '/nivel3/novedades', element: <Novedades3 /> },
+	{ path: '/nivel3/cuota/:id', element: <Niv3Cuota /> },
+	{ path: '/nivel3/cuotaic3/:id', element: <Niv3CuotaIc3 /> },
+	{ path: '/nivel3/extracto', element: <Extractp /> },
+	{ path: '/nivel3/resumenes', element: <Resumenes /> },
+	{ path: '/nivel3/resumenes2', element: <Resumenes2 /> },
+	{ path: '/nivel3/resumenes3', element: <Resumenes3 /> },
+	{ path: '/nivel3/carga1', element: <Carga1 /> },
 
 
 	
