@@ -15,7 +15,15 @@ import {
   Divider,
   TextField
 } from "@mui/material";
-
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+} from "@mui/material";
 import logo from "../../../Assets/marcas.png";
 import PrintIcon from "@mui/icons-material/Print";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
@@ -38,7 +46,8 @@ const [desdeAnio, setDesdeAnio] = useState("");
 const [filtroTexto, setFiltroTexto] = useState("");
 const [hastaMes, setHastaMes] = useState("");
 const [hastaAnio, setHastaAnio] = useState("");
-
+const [page, setPage] = useState(0);
+const [rowsPerPage, setRowsPerPage] = useState(10);
 const [tipoFecha, setTipoFecha] = useState("pago"); // "pago" o "cuota"
   // helper
   const esVacio = (v) =>
@@ -731,7 +740,108 @@ const textoOk =
   onChange={(e) => setFiltroTexto(e.target.value)}
   sx={{ minWidth: 260 }}
 />  
+<TableContainer>
+  <Table>
+    <TableHead>
+      <TableRow>
+        <TableCell>Mes</TableCell>
+        <TableCell>Año</TableCell>
+        <TableCell>Zona</TableCell>
+        <TableCell>Fracción</TableCell>
+        <TableCell>Manzana</TableCell>
 
+        {filtroZona !== "PIT" && (
+          <TableCell>Lote</TableCell>
+        )}
+
+        {filtroZona !== "IC3" && (
+          <TableCell>Parcela</TableCell>
+        )}
+
+        <TableCell>CUIL / CUIT</TableCell>
+        <TableCell>Nombre</TableCell>
+        <TableCell>Monto</TableCell>
+      </TableRow>
+    </TableHead>
+
+    <TableBody>
+      {pagosFiltrados
+        .slice(
+          page * rowsPerPage,
+          page * rowsPerPage + rowsPerPage
+        )
+        .map((p, index) => {
+          const esIC3 = p.origen === "ic3";
+          const esPIT = p.origen === "normal";
+
+          return (
+            <TableRow key={index} hover>
+              <TableCell>{p.mes}</TableCell>
+
+              <TableCell>{p.anio}</TableCell>
+
+              <TableCell>
+                <Chip
+                  label={esIC3 ? "IC3" : "PIT"}
+                  color={esIC3 ? "secondary" : "primary"}
+                  size="small"
+                />
+              </TableCell>
+
+              <TableCell>
+                {p.fraccion || "-"}
+              </TableCell>
+
+              <TableCell>
+                {p.manzana || "-"}
+              </TableCell>
+
+              {filtroZona !== "PIT" && (
+                <TableCell>
+                  {esPIT
+                    ? "No corresponde"
+                    : p.lote || "-"}
+                </TableCell>
+              )}
+
+              {filtroZona !== "IC3" && (
+                <TableCell>
+                  {esIC3
+                    ? "No corresponde"
+                    : p.parcela || "-"}
+                </TableCell>
+              )}
+
+              <TableCell>
+                {p.cuil_cuit}
+              </TableCell>
+
+              <TableCell>
+                {p.nombre}
+              </TableCell>
+
+              <TableCell>
+                ${formatMoney(p.monto)}
+              </TableCell>
+            </TableRow>
+          );
+        })}
+    </TableBody>
+  </Table>
+
+  <TablePagination
+    component="div"
+    count={pagosFiltrados.length}
+    page={page}
+    rowsPerPage={rowsPerPage}
+    onPageChange={(e, newPage) => setPage(newPage)}
+    onRowsPerPageChange={(e) => {
+      setRowsPerPage(parseInt(e.target.value, 10));
+      setPage(0);
+    }}
+    rowsPerPageOptions={[5, 10, 20, 50]}
+  />
+</TableContainer>
         {/* TABLA */}
         <Paper
           elevation={0}

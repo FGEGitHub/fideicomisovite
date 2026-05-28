@@ -2,7 +2,19 @@ import { useState, useEffect } from "react";
 import servicioPagos from "../../../services/pagos";
 import { useNavigate } from "react-router-dom";
 import BotonRechazo from "./RechazoPagoInusual";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  TextField,
+  InputAdornment,
+} from "@mui/material";
 
+import SearchIcon from "@mui/icons-material/Search";
 
 import { Box, Paper, Typography, alpha, Button, Chip } from "@mui/material";
 
@@ -11,6 +23,9 @@ import TableRowsRoundedIcon from "@mui/icons-material/TableRowsRounded";
 
 const PagosInusuales = () => {
     const [pagos, setPagos] = useState([]);
+    const [search, setSearch] = useState("");
+const [page, setPage] = useState(0);
+const [rowsPerPage, setRowsPerPage] = useState(5);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -214,7 +229,15 @@ const PagosInusuales = () => {
             },
         },
     };
+const pagosFiltrados = pagos.filter((p) => {
+    const texto = search.toLowerCase();
 
+    return (
+        p?.cuil_cuitc?.toString().includes(texto) ||
+        p?.Nombre?.toLowerCase().includes(texto) ||
+        p?.tipologia?.toLowerCase().includes(texto)
+    );
+});
     return (
         <Box
             sx={{
@@ -366,12 +389,184 @@ const PagosInusuales = () => {
                         "& .MuiPaper-root": { boxShadow: "none" },
                     }}
                 >
-                   {/*  <MUIDataTable
-                        title={""}
-                        data={pagos}
-                        columns={columns}
-                        options={options}
-                    /> */}
+             <Box sx={{ mb: 2 }}>
+    <TextField
+        fullWidth
+        size="small"
+        placeholder="Buscar por CUIL, nombre o tipología..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        InputProps={{
+            startAdornment: (
+                <InputAdornment position="start">
+                    <SearchIcon />
+                </InputAdornment>
+            ),
+        }}
+    />
+</Box>
+
+<TableContainer>
+    <Table stickyHeader>
+        <TableHead>
+            <TableRow>
+                <TableCell>ID</TableCell>
+                <TableCell>CUIL/CUIT</TableCell>
+                <TableCell>Tipología</TableCell>
+                <TableCell>Fecha Notificación</TableCell>
+                <TableCell>Fecha Vencimiento</TableCell>
+                <TableCell>Importe</TableCell>
+                <TableCell>Riesgo</TableCell>
+                <TableCell>Estado</TableCell>
+                <TableCell>Fecha</TableCell>
+                <TableCell>Acciones</TableCell>
+                <TableCell>Descarga</TableCell>
+            </TableRow>
+        </TableHead>
+
+        <TableBody>
+            {pagosFiltrados
+                .slice(
+                    page * rowsPerPage,
+                    page * rowsPerPage + rowsPerPage
+                )
+                .map((p, index) => (
+                    <TableRow key={index} hover>
+                        <TableCell>{p.id}</TableCell>
+
+                        <TableCell>
+                            <Box
+                                onClick={() =>
+                                    navigate(
+                                        "/usuario2/detallecliente/" +
+                                            p?.cuil_cuitc
+                                    )
+                                }
+                                sx={{
+                                    cursor: "pointer",
+                                    fontWeight: 900,
+                                    color: "#01567c",
+                                    textDecoration: "underline",
+                                    textUnderlineOffset: "3px",
+                                }}
+                            >
+                                {p.cuil_cuitc}
+                            </Box>
+                        </TableCell>
+
+                        <TableCell>{p.tipologia}</TableCell>
+
+                        <TableCell>
+                            {p.fechanotificacion}
+                        </TableCell>
+
+                        <TableCell>
+                            {p.fechavencimiento}
+                        </TableCell>
+
+                        <TableCell
+                            sx={{
+                                fontWeight: 900,
+                            }}
+                        >
+                            $
+                            {isNaN(Number(p.monto))
+                                ? p.monto
+                                : Number(p.monto).toFixed(2)}
+                        </TableCell>
+
+                        <TableCell>
+                            <Chip
+                                label={`${p.riesgo}%`}
+                                color={
+                                    Number(p.riesgo) > 70
+                                        ? "error"
+                                        : Number(p.riesgo) > 40
+                                        ? "warning"
+                                        : "success"
+                                }
+                                size="small"
+                            />
+                        </TableCell>
+
+                        <TableCell>
+                            {p.proceso ===
+                                "averificarnivel2" &&
+                                "Pendiente carga documentación"}
+
+                            {p.proceso ===
+                                "averificarnivel3" &&
+                                "Pendiente clasificación"}
+
+                            {p.proceso === "Inusual" &&
+                                "Cerrado (Sin alerta)"}
+
+                            {p.proceso ===
+                                "Sospechoso" &&
+                                "Cerrado (Con alerta)"}
+                        </TableCell>
+
+                        <TableCell
+                            sx={{
+                                whiteSpace: "nowrap",
+                            }}
+                        >
+                            Pago({p.fecha})
+                            <br />
+                            Cuota({p.mesc}/{p.anioc})
+                        </TableCell>
+
+                        <TableCell>
+                            <BotonRechazo
+                                id={p.id}
+                                getPagosi={getPagosi}
+                            />
+                        </TableCell>
+
+                        <TableCell>
+                            <Button
+                                onClick={() =>
+                                    navigate(
+                                        p?.zona === "IC3"
+                                            ? `/usuario2/cuotaic3/${p?.id_cuota}`
+                                            : `/usuario2/pagoscuotas/${p?.id_cuota}`
+                                    )
+                                }
+                                sx={{
+                                    textTransform: "none",
+                                    fontWeight: 900,
+                                    borderRadius: 999,
+                                    px: 2,
+                                    color: "#fff",
+                                    background:
+                                        "linear-gradient(90deg, #01567c 0%, #148D8D 100%)",
+                                }}
+                            >
+                                Ver pagos
+                            </Button>
+                        </TableCell>
+                    </TableRow>
+                ))}
+        </TableBody>
+    </Table>
+
+    <TablePagination
+        component="div"
+        count={pagosFiltrados.length}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        onPageChange={(e, newPage) =>
+            setPage(newPage)
+        }
+        onRowsPerPageChange={(e) => {
+            setRowsPerPage(
+                parseInt(e.target.value, 10)
+            );
+            setPage(0);
+        }}
+        rowsPerPageOptions={[5, 10, 15, 20]}
+    />
+</TableContainer>
                 </Box>
             </Paper>
 

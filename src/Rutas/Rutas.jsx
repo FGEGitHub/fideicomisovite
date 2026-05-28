@@ -155,7 +155,7 @@ const Rutas = [
 	{ path: '/usuario2/detallecliente/:cuil_cuit', element: <DetalleCliente /> },
 	{ path: '/usuario2/detalleclic3/:cuil_cuit', element: <DetalleClienteic3 /> },
 
-
+{ path: '/usuario2/inusuales', element: <Inusualesniv2 /> },
 	{ path: '/usuario2/agregarcuotas/:id', element: <Agregarcuotas /> },
 	{ path: '/usuario2/asignarloteausuario/:cuil_cuit', element: <AsignarLoteAUsuario /> },
 /* 	{ path: '/usuario2/aprobaciones', element: <Aprobaciones /> },
