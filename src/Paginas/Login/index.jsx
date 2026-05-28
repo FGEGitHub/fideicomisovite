@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import loginService from "../../services/login";
-import servicioUsuario from "../../services/usuarios";
+import loginService from '../../services/login';
+import servicioUsuario from '../../services/usuarios';
 
 import {
   Button,
@@ -14,17 +14,20 @@ import {
   CircularProgress,
   Avatar,
   Link,
-  FormControlLabel,
-  Checkbox,
-  Alert,
+  InputAdornment
 } from "@mui/material";
 
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
+
+/* import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline'; */
 
 
-import marcas from "../../Assets/marcas.png";
+import marcas from '../../Assets/marcas.png';
 
 const Login = () => {
+
   const [errorCredenciales, setErrorCredenciales] = useState("");
 
   const [usuario, setUsuario] = useState({
@@ -33,41 +36,39 @@ const Login = () => {
   });
 
   const [user, setUser] = useState(null);
-
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    const loggedUserJSON =
-      window.localStorage.getItem("loggedNoteAppUser");
+    const loggedUserJSON = window.localStorage.getItem('loggedNoteAppUser');
 
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON);
 
       switch (user.nivel) {
         case 1:
-          navigate("/usuario/menu");
+          navigate('/usuario/menu');
           break;
 
         case 2:
-          navigate("/usuario2/clientes");
+          navigate('/usuario2/clientes');
           break;
 
         case 3:
-          navigate("/nivel3");
+          navigate('/nivel3/');
           break;
 
         case 4:
-          navigate("/legales/clientes");
+          navigate('/legales/clientes');
           break;
 
         case 5:
-          navigate("/usuariomapas/inicio");
+          navigate('/usuariomapas/inicio');
           break;
 
         case 6:
-          navigate("/nivel6/carga");
+          navigate('/nivel6/carga');
           break;
 
         default:
@@ -83,173 +84,179 @@ const Login = () => {
       servicioUsuario.setToken(user.token);
     }
 
-    window.localStorage.removeItem("loggedNoteAppUser");
+    window.localStorage.removeItem('loggedNoteAppUser');
   };
 
-const loginSubmit = async (event) => {
-  event.preventDefault();
+  const loginSubmit = async (event) => {
+    event.preventDefault();
 
-  setLoading(true);
-  setErrorCredenciales("");
+    setLoading(true);
+    setErrorCredenciales("");
 
-  try {
-    const user = await loginService.login({
-      cuil_cuit: usuario.cuil_cuit,
-      password: usuario.password,
-    });
+    try {
 
-    console.log("LOGIN OK", user);
+      const user = await loginService.login({
+        cuil_cuit: usuario.cuil_cuit,
+        password: usuario.password
+      });
 
-    // guardar primero
-    window.localStorage.setItem(
-      "loggedNoteAppUser",
-      JSON.stringify(user)
-    );
+      window.localStorage.setItem(
+        'loggedNoteAppUser',
+        JSON.stringify(user)
+      );
 
-    // guardar token
-    servicioUsuario.setToken(user.token);
+      servicioUsuario.setToken(user.token);
 
-    // actualizar estado
-    setUser(user);
+      setUser(user);
 
-    // pequeña espera para evitar rebote
-    await new Promise((resolve) =>
-      setTimeout(resolve, 300)
-    );
+      setLoading(false);
 
-    setLoading(false);
+      switch (user.nivel) {
 
-    // asegurar número
-    const nivel = Number(user.nivel);
+        case 1:
+          navigate('/usuario/menu');
+          window.location.reload();
+          break;
 
-    switch (nivel) {
-      case 1:
-        navigate("/usuario/menu");
-        break;
+        case 2:
+          navigate('/usuario2/clientes');
+          window.location.reload();
+          break;
 
-      case 2:
-        navigate("/usuario2/clientes");
-        break;
+        case 3:
+          navigate('/nivel3');
+          window.location.reload();
+          break;
 
-      case 3:
-        navigate("/nivel3");
-        break;
+        case 4:
+          navigate('/legales/clientes');
+          window.location.reload();
+          break;
 
-      case 4:
-        navigate("/legales/clientes");
-        break;
+        case 5:
+          navigate('/usuariomapas/inicio');
+          window.location.reload();
+          break;
 
-      case 5:
-        navigate("/usuariomapas/inicio");
-        break;
+        case 6:
+          navigate('/nivel6/carga');
+          window.location.reload();
+          break;
 
-      case 6:
-        navigate("/nivel6/carga");
-        break;
+        case 10:
+          navigate('/admin/usuarios');
+          window.location.reload();
+          break;
 
-      case 10:
-        navigate("/admin/usuarios");
-        break;
+        default:
+          break;
+      }
 
-      default:
-        navigate("/");
-        break;
+    } catch (error) {
+
+      console.error(error);
+
+      setLoading(false);
+
+      setErrorCredenciales(
+        "Cuil/Cuit y/o contraseña incorrectos"
+      );
     }
-
-  } catch (error) {
-    console.error(error);
-
-    setLoading(false);
-
-    setErrorCredenciales(
-      "Cuil/Cuit y/o contraseña incorrectos"
-    );
-  }
-};
+  };
 
   const handleChange = (e) => {
     setUsuario({
       ...usuario,
-      [e.target.name]: e.target.value,
+      [e.target.name]: e.target.value
     });
   };
 
   return (
+
     <Grid
       container
       component="main"
       sx={{
-        minHeight: "100vh",
+        height: '100vh',
+        background: '#051821'
       }}
     >
-      {/* Lado izquierdo */}
+
+      {/* Columna izquierda */}
       <Grid
         item
         xs={false}
         md={6}
         sx={{
-          display: { xs: "none", md: "flex" },
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
+          display: { xs: 'none', md: 'flex' },
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
           p: 4,
-          background: "#051821",
-          color: "white",
+          textAlign: 'center',
+          background: '#051821',
+          color: 'white',
         }}
       >
+
         <Box
           component="img"
           src={marcas}
           alt="Logo"
           sx={{
             width: 700,
-            maxWidth: "100%",
+            maxWidth: '100%'
           }}
         />
+
       </Grid>
 
-      {/* Lado derecho */}
+      {/* Columna derecha */}
       <Grid
         item
         xs={12}
         md={6}
         sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          background: "#051821",
-          p: 2,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          background: '#051821'
         }}
       >
+
         <Box
           sx={{
-            width: "100%",
+            width: '100%',
             maxWidth: 420,
+            mx: 4,
           }}
         >
+
           <Card
-            elevation={10}
+            elevation={8}
             sx={{
-              borderRadius: 4,
               p: 4,
+              backgroundColor: '#ffffff',
+              borderRadius: 3
             }}
           >
+
+            {/* Header */}
             <Box
               sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
               }}
             >
+
               <Avatar
                 sx={{
                   m: 1,
-                  bgcolor: "#002d57",
-                  width: 56,
-                  height: 56,
+                  bgcolor: '#002d57'
                 }}
               >
-                <LockOutlinedIcon />
+            {/*     <LockOutlinedIcon /> */}
               </Avatar>
 
               <Typography
@@ -265,24 +272,23 @@ const loginSubmit = async (event) => {
                 sx={{
                   mt: 1,
                   mb: 3,
-                  textAlign: "center",
+                  textAlign: 'center',
+                  color: '#666'
                 }}
               >
                 Iniciar Sesión
               </Typography>
+
             </Box>
 
-            {errorCredenciales && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {errorCredenciales}
-              </Alert>
-            )}
-
+            {/* Formulario */}
             <Box
               component="form"
               onSubmit={loginSubmit}
               noValidate
             >
+
+              {/* Usuario */}
               <TextField
                 fullWidth
                 margin="normal"
@@ -291,8 +297,18 @@ const loginSubmit = async (event) => {
                 value={usuario.cuil_cuit}
                 onChange={handleChange}
                 variant="outlined"
+                error={!!errorCredenciales}
+                helperText={" "}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+            {/*           <PersonOutlineIcon /> */}
+                    </InputAdornment>
+                  ),
+                }}
               />
 
+              {/* Password */}
               <TextField
                 fullWidth
                 margin="normal"
@@ -302,60 +318,70 @@ const loginSubmit = async (event) => {
                 value={usuario.password}
                 onChange={handleChange}
                 variant="outlined"
+                error={!!errorCredenciales}
+                helperText={errorCredenciales || " "}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                  {/*     <LockOutlinedIcon /> */}
+                    </InputAdornment>
+                  ),
+                }}
               />
 
-              <Box sx={{ mt: 1 }}>
-                <Link
-                  component="button"
-                  variant="body2"
-                  underline="hover"
-                >
-                 {/*  <RecuperoC /> */}
-                </Link>
-              </Box>
+              {/* Recuperar contraseña */}
+              <Link
+                href="#"
+                variant="body2"
+                underline="hover"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
 
+              {/* Recordarme */}
               <FormControlLabel
                 control={<Checkbox color="primary" />}
                 label="Recordarme"
                 sx={{ mt: 1 }}
               />
 
+              {/* Botón */}
               <Button
                 type="submit"
                 fullWidth
                 variant="contained"
-                disabled={
-                  loading ||
-                  !usuario.cuil_cuit ||
-                  !usuario.password
-                }
+                disabled={loading}
                 sx={{
-                  background: "#148D8D",
+                  background: '#148D8D',
                   mt: 2,
                   mb: 2,
                   height: 45,
-                  fontWeight: "bold",
+                  fontWeight: 'bold',
+                  '&:hover': {
+                    background: '#0f7373'
+                  }
                 }}
               >
+
                 {loading ? (
                   <CircularProgress
                     size={25}
-                    sx={{ color: "white" }}
+                    sx={{ color: '#fff' }}
                   />
                 ) : (
                   "Ingresar"
                 )}
+
               </Button>
 
-              <Grid container justifyContent="center">
-                <Typography variant="body2">
-                  ¿No estás registrado? {/* <Registro /> */}
-                </Typography>
-              </Grid>
             </Box>
+
           </Card>
+
         </Box>
+
       </Grid>
+
     </Grid>
   );
 };
