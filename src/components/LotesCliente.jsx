@@ -938,14 +938,16 @@ const exportarExcel = () => {
                 Ver pagos
               </Button>
 
-              <Button
-                size="small"
-                color="error"
-                variant="contained"
-                onClick={() => borrar(row.id)}
-              >
-                Borrar
-              </Button>
+            {row.diferencia < 0 && (
+  <Button
+    size="small"
+    color="warning"
+    variant="contained"
+    onClick={() => abrirCompensar(row.id)}
+  >
+    Compensar
+  </Button>
+)}
             </Box>
           </StyledTableCell>
 
