@@ -202,7 +202,19 @@ const obtenerCuotaQueCancelo = (idCuotaCancelada) => {
     if (!idCompensada || idCompensada === "No") return null;
     return cuotas?.find((c) => c.id === Number(idCompensada));
   };
+const obtenerCuotaCompensada = (idCompensada) => {
+  if (
+    !idCompensada ||
+    idCompensada === "No" ||
+    idCompensada === "0"
+  ) {
+    return null;
+  }
 
+  return cuotas.find(
+    (cuota) => String(cuota.id) === String(idCompensada)
+  );
+};
   function saldoReal(dataIndex) {
     return (
       <>
@@ -854,22 +866,39 @@ const exportarExcel = () => {
           </StyledTableCell>
 
           {/* DIFERENCIA */}
-          <StyledTableCell>
-            <Typography
-              sx={{
-                fontWeight: 900,
-                color:
-                  row.diferencia >= 0
-                    ? "#148D8D"
-                    : "#d32f2f",
-              }}
-            >
-              $
-              {new Intl.NumberFormat("de-DE").format(
-                row.diferencia || 0
-              )}
-            </Typography>
-          </StyledTableCell>
+    <StyledTableCell>
+  {(() => {
+    const cuotaCompensada = obtenerCuotaCompensada(row.compensada);
+
+    return (
+      <>
+        <Typography
+          sx={{
+            fontWeight: 900,
+            color: row.diferencia >= 0 ? "#148D8D" : "#d32f2f",
+          }}
+        >
+          $
+          {new Intl.NumberFormat("de-DE").format(row.diferencia || 0)}
+        </Typography>
+
+        {cuotaCompensada && (
+          <Typography
+            variant="caption"
+            sx={{
+              display: "block",
+              color: "#01567c",
+              fontWeight: 700,
+            }}
+          >
+            (Compensada {String(cuotaCompensada.mes).padStart(2, "0")}/
+            {cuotaCompensada.anio})
+          </Typography>
+        )}
+      </>
+    );
+  })()}
+</StyledTableCell>
 
           {/* SALDO REAL */}
 <StyledTableCell>
