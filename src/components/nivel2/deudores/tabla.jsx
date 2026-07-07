@@ -386,15 +386,11 @@ const Deudores = () => {
                       </TableCell>
 
                       <TableCell>
-                        {c.cuotasquedebe?.length > 0 ? (
-                          <Tooltip title="Ver cuotas adeudadas">
+                                <Tooltip title="Ver cuotas adeudadas">
                             <IconButton size="small" onClick={() => handleOpenDetalle(c)}>
                               <ReceiptLongRoundedIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                        ) : (
-                          <Chip label="Sin deuda" size="small" color="success" />
-                        )}
                       </TableCell>
                     </TableRow>
                   );
