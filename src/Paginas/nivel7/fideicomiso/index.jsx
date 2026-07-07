@@ -4,7 +4,6 @@ import Fideicomiso from "../../../components/movimientos2/fideicomiso";
 import CssBaseline from "@mui/material/CssBaseline";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box } from "@mui/material";
 
 export default function FideicomisoPage() {
   const navigate = useNavigate();
@@ -30,27 +29,7 @@ export default function FideicomisoPage() {
         <>
           <CssBaseline />
           <BarraLAteral>
-            <Box
-              sx={{
-                height: "100vh",
-                display: "flex",
-                flexDirection: "column",
-                overflow: "hidden",
-              }}
-            >
-              <Box
-                sx={{
-                  flex: 1,
-                  minHeight: 0,
-                  display: "flex",
-                  flexDirection: "column",
-                  overflow: "hidden",
-                  p: 1,
-                }}
-              >
-                <Fideicomiso />
-              </Box>
-            </Box>
+            <Fideicomiso />
           </BarraLAteral>
         </>
       ) : (

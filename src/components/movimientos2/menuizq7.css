@@ -1,0 +1,307 @@
+.mi-shell {
+  background: #f4f7f9;
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-width: 100vw;
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+
+/* ---------- SIDEBAR ---------- */
+/* position: fixed a propósito: el sidebar siempre ocupa el alto real de
+   pantalla sin importar cuánto scroll tenga el contenido principal. */
+.mi-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  max-width: 100%;
+  background: linear-gradient(180deg, #051821 0%, #0b2a3a 48%, #06405c 100%);
+  color: #eaf3f7;
+  box-shadow: 4px 0 24px rgba(2, 12, 20, 0.25);
+  overflow: hidden;
+  transition: width 0.15s ease;
+}
+
+.mi-sidebar.is-resizing {
+  transition: none;
+  user-select: none;
+}
+
+/* ---------- BRAND / LOGO ---------- */
+.mi-sidebar-brand {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 14px 14px;
+}
+
+.mi-brand-logo {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: left center;
+  display: block;
+}
+
+.mi-sidebar-close {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(234, 243, 247, 0.7);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mi-sidebar-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.mi-sidebar-divider {
+  flex-shrink: 0;
+  height: 1px;
+  margin: 4px 16px 14px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0));
+}
+
+/* ---------- NAV ---------- */
+.mi-sidebar-nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mi-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.03);
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.mi-nav-item:hover {
+  transform: translateX(2px);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.mi-nav-item.active {
+  background: linear-gradient(90deg, var(--accent-soft, rgba(20, 141, 141, 0.22)), rgba(255, 255, 255, 0.03));
+  border-color: var(--accent, #148d8d);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.mi-nav-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  border-radius: 4px;
+  background: var(--accent, #148d8d);
+}
+
+.mi-nav-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-soft, rgba(20, 141, 141, 0.18));
+  color: var(--accent, #6fd6d6);
+  transition: all 0.15s ease;
+}
+
+.mi-nav-item.active .mi-nav-icon {
+  background: var(--accent, #148d8d);
+  color: #fff;
+}
+
+.mi-nav-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #f2f8fa;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mi-nav-item.active .mi-nav-title {
+  font-weight: 800;
+}
+
+.mi-nav-arrow {
+  flex-shrink: 0;
+  color: rgba(234, 243, 247, 0.3);
+  transition: transform 0.15s ease, color 0.15s ease;
+  font-size: 18px;
+}
+
+.mi-nav-item.active .mi-nav-arrow,
+.mi-nav-item:hover .mi-nav-arrow {
+  transform: translateX(2px);
+  color: var(--accent, #6fd6d6);
+}
+
+/* ---------- FOOTER ---------- */
+.mi-sidebar-footer {
+  flex-shrink: 0;
+  padding: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mi-user-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  margin-bottom: 8px;
+}
+
+.mi-user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #2aaad1, #148d8d);
+  color: #fff;
+  font-weight: 800;
+  font-size: 12.5px;
+}
+
+.mi-user-info {
+  min-width: 0;
+}
+
+.mi-user-name {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #f2f8fa;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mi-user-role {
+  margin: 0;
+  font-size: 10.5px;
+  color: rgba(234, 243, 247, 0.5);
+}
+
+.mi-logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(234, 243, 247, 0.85);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mi-logout-btn:hover {
+  background: rgba(220, 38, 38, 0.18);
+  border-color: rgba(220, 38, 38, 0.4);
+  color: #fecaca;
+}
+
+/* ---------- RESIZER ---------- */
+.mi-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 5;
+}
+
+.mi-resizer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 2px;
+  width: 2px;
+  height: 100%;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.mi-resizer:hover::after,
+.mi-sidebar.is-resizing .mi-resizer::after {
+  background: #2aaad1;
+}
+
+/* ---------- MAIN CONTENT ---------- */
+.mi-main {
+  min-width: 0;
+  padding: 24px;
+  overflow-x: hidden;
+  overflow-y: visible;
+  transition: margin-left 0.15s ease;
+}
+
+.mi-show-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 9px 16px;
+  border-radius: 11px;
+  border: none;
+  background: linear-gradient(135deg, #071c2b, #0d3a49);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(7, 28, 43, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mi-show-menu-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(7, 28, 43, 0.32);
+}
