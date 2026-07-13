@@ -21,6 +21,10 @@ import {
   Chip,
 } from "@mui/material";
 import { Autocomplete } from "@mui/material";
+import FilterAltIcon from "@mui/icons-material/FilterAlt";
+
+const COLOR_NAVY = "#083b5c";
+const COLOR_TEAL = "#148D8D";
 
 const CONCEPTOS = [];
 const categoriasEgresos = [
@@ -53,7 +57,6 @@ const [filtroAnio, setFiltroAnio] = useState("");
 const [filtroCuit, setFiltroCuit] = useState("");
 const [filtroFecha, setFiltroFecha] = useState("");
 const [filtroConcepto, setFiltroConcepto] = useState("");
-const [busqueda, setBusqueda] = useState("");
   const [ordenCampo, setOrdenCampo] = useState("fecha");
   const [ordenDireccion, setOrdenDireccion] = useState("desc");
 
@@ -162,6 +165,9 @@ const [busqueda, setBusqueda] = useState("");
   const formatearMoneda = (valor) =>
     !valor ? "-" : `$ ${Number(valor).toLocaleString("es-AR", { minimumFractionDigits: 2 })}`;
 
+  const conceptosDisponibles = [...new Set(movimientos.map((m) => m.concepto).filter(Boolean))].sort(
+    (a, b) => a.localeCompare(b, "es")
+  );
 
 const filtered = movimientos
   .filter((m) => {
@@ -195,19 +201,9 @@ const filtered = movimientos
       !filtroFecha ||
       valorFecha(m.fechacarga) === valorFecha(filtroFecha);
 
-    // 🔥 CONCEPTO (seguro)
+    // 🔥 CONCEPTO (exacto, ahora que es un desplegable)
     const coincideConcepto =
-      !filtroConcepto ||
-      (m.concepto || "")
-        .toLowerCase()
-        .includes(filtroConcepto.toLowerCase());
-
-    // 🔥 BUSQUEDA GLOBAL
-    const coincideBusqueda =
-      !busqueda ||
-      JSON.stringify(m)
-        .toLowerCase()
-        .includes(busqueda.toLowerCase());
+      !filtroConcepto || (m.concepto || "") === filtroConcepto;
 
     return (
       coincideTipo &&
@@ -215,8 +211,7 @@ const filtered = movimientos
       coincideAnio &&
       coincideCuit &&
       coincideFecha &&
-      coincideConcepto &&
-      coincideBusqueda
+      coincideConcepto
     );
   })
   .sort((a, b) => {
@@ -244,115 +239,114 @@ return (
 <Box
   sx={{
     background: "#fff",
-    borderRadius: "18px",
-
-    p: 2,
-
+    borderRadius: "16px",
+    p: 2.25,
     mb: 2,
-
-    border: "1px solid #E2E8F0",
-
-    boxShadow: "0 4px 14px rgba(0,0,0,0.04)",
+    border: "1px solid rgba(8,59,92,0.08)",
+    boxShadow: "0 4px 14px rgba(8,59,92,0.05)",
   }}
 >
-
-
   <Box
     sx={{
       display: "grid",
-
-      gridTemplateColumns:
-        "repeat(auto-fit, minmax(180px, 1fr))",
-
-      gap: 2,
+      gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+      gap: 1.5,
     }}
   >
-    <TextField
-      select
-      value={filtroTipo}
-      onChange={(e) =>
-        setFiltroTipo(e.target.value)
-      }
-      size="small"
-      label="Tipo"
-      fullWidth
-    >
-      <MenuItem value="">Todos</MenuItem>
+    {[
+      <TextField
+        key="tipo"
+        select
+        value={filtroTipo}
+        onChange={(e) => setFiltroTipo(e.target.value)}
+        size="small"
+        label="Tipo"
+        fullWidth
+      >
+        <MenuItem value="">Todos</MenuItem>
+        <MenuItem value="INGRESO">Ingreso</MenuItem>
+        <MenuItem value="EGRESO">Egreso</MenuItem>
+      </TextField>,
 
-      <MenuItem value="INGRESO">
-        Ingreso
-      </MenuItem>
+      <TextField
+        key="mes"
+        select
+        label="Mes"
+        value={filtroMes}
+        onChange={(e) => setFiltroMes(e.target.value)}
+        size="small"
+        fullWidth
+      >
+        <MenuItem value="">Todos</MenuItem>
+        {[...Array(12)].map((_, i) => {
+          const mes = (i + 1).toString().padStart(2, "0");
+          return (
+            <MenuItem key={mes} value={mes}>
+              {nombreMes(mes)}
+            </MenuItem>
+          );
+        })}
+      </TextField>,
 
-      <MenuItem value="EGRESO">
-        Egreso
-      </MenuItem>
-    </TextField>
+      <TextField
+        key="anio"
+        select
+        label="Año"
+        value={filtroAnio}
+        onChange={(e) => setFiltroAnio(e.target.value)}
+        size="small"
+        fullWidth
+      >
+        <MenuItem value="">Todos</MenuItem>
+        {[2023, 2024, 2025, 2026].map((anio) => (
+          <MenuItem key={anio} value={anio.toString()}>
+            {anio}
+          </MenuItem>
+        ))}
+      </TextField>,
 
-  <TextField
-  select
-  label="Mes"
-  value={filtroMes}
-  onChange={(e) => setFiltroMes(e.target.value)}
-  size="small"
-  fullWidth
->
-  <MenuItem value="">Todos</MenuItem>
-  {[...Array(12)].map((_, i) => {
-    const mes = (i + 1).toString().padStart(2, "0");
-    return (
-      <MenuItem key={mes} value={mes}>
-        {nombreMes(mes)}
-      </MenuItem>
-    );
-  })}
-</TextField>
+      <TextField
+        key="concepto"
+        select
+        label="Concepto"
+        value={filtroConcepto}
+        onChange={(e) => setFiltroConcepto(e.target.value)}
+        size="small"
+        fullWidth
+      >
+        <MenuItem value="">Todos</MenuItem>
+        {conceptosDisponibles.map((concepto) => (
+          <MenuItem key={concepto} value={concepto}>
+            {concepto}
+          </MenuItem>
+        ))}
+      </TextField>,
 
-  <TextField
-  select
-  label="Año"
-  value={filtroAnio}
-  onChange={(e) => setFiltroAnio(e.target.value)}
-  size="small"
-  fullWidth
->
-  <MenuItem value="">Todos</MenuItem>
-  {[2023, 2024, 2025, 2026].map((anio) => (
-    <MenuItem key={anio} value={anio.toString()}>
-      {anio}
-    </MenuItem>
-  ))}
-</TextField>
-
-    <TextField
-      label="CUIT/CUIL"
-      value={filtroCuit}
-      onChange={(e) =>
-        setFiltroCuit(e.target.value)
-      }
-      size="small"
-      fullWidth
-    />
-
-
-    <TextField
-      label="Concepto"
-      value={filtroConcepto}
-      onChange={(e) =>
-        setFiltroConcepto(e.target.value)
-      }
-      size="small"
-      fullWidth
-    />
-
-    <TextField
-      label="Buscar"
-      value={busqueda}
-      onChange={(e) =>
-        setBusqueda(e.target.value)
-      }
-      size="small"
-      fullWidth
-    />
+      <TextField
+        key="cuit"
+        label="CUIT/CUIL"
+        placeholder="Buscar por CUIT/CUIL"
+        value={filtroCuit}
+        onChange={(e) => setFiltroCuit(e.target.value)}
+        size="small"
+        fullWidth
+      />,
+    ].map((campo) => (
+      <Box
+        key={campo.key}
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            borderRadius: "10px",
+            background: "#fbfdfe",
+            "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: COLOR_TEAL },
+            "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: COLOR_TEAL },
+          },
+          "& .MuiInputLabel-root.Mui-focused": { color: COLOR_TEAL },
+        }}
+      >
+        {campo}
+      </Box>
+    ))}
   </Box>
 </Box>
 

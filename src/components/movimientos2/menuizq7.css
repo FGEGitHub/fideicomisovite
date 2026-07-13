@@ -22,6 +22,7 @@
   max-width: 100%;
   background: linear-gradient(180deg, #051821 0%, #0b2a3a 48%, #06405c 100%);
   color: #eaf3f7;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   box-shadow: 4px 0 24px rgba(2, 12, 20, 0.25);
   overflow: hidden;
   transition: width 0.15s ease;
@@ -149,7 +150,8 @@
   flex: 1;
   min-width: 0;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
+  letter-spacing: 0.1px;
   color: #f2f8fa;
   white-space: nowrap;
   overflow: hidden;
@@ -157,7 +159,7 @@
 }
 
 .mi-nav-item.active .mi-nav-title {
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .mi-nav-arrow {
@@ -201,7 +203,7 @@
   justify-content: center;
   background: linear-gradient(135deg, #2aaad1, #148d8d);
   color: #fff;
-  font-weight: 800;
+  font-weight: 600;
   font-size: 12.5px;
 }
 
@@ -212,7 +214,7 @@
 .mi-user-name {
   margin: 0;
   font-size: 12.5px;
-  font-weight: 700;
+  font-weight: 500;
   color: #f2f8fa;
   white-space: nowrap;
   overflow: hidden;
@@ -237,7 +239,7 @@
   background: rgba(255, 255, 255, 0.03);
   color: rgba(234, 243, 247, 0.85);
   font-size: 12.5px;
-  font-weight: 700;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -294,8 +296,9 @@
   border: none;
   background: linear-gradient(135deg, #071c2b, #0d3a49);
   color: #fff;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   cursor: pointer;
   box-shadow: 0 8px 20px rgba(7, 28, 43, 0.25);
   transition: transform 0.15s ease, box-shadow 0.15s ease;

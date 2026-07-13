@@ -1,8 +1,50 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import servicionivel3 from "../../services/nivel3";
 
-const headerGradient =
-  "linear-gradient(90deg, #0a3b4f 0%, #0b4f6c 55%, #148D8D 100%)";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import ShowChartIcon from "@mui/icons-material/ShowChart";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  BarChart,
+  Bar,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Cell,
+  PieChart,
+  Pie,
+} from "recharts";
+
+const COLOR_NAVY = "#083b5c";
+const COLOR_TEAL = "#148D8D";
+const COLOR_GREEN = "#15803d";
+const FONT_FORMAL = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+// Paleta solo para "Ingresos por concepto": evita el rojo a propósito,
+// porque en el resto del dashboard el rojo significa "egreso".
+const PIE_COLORS = [COLOR_GREEN, COLOR_TEAL, "#2aaad1", COLOR_NAVY, "#7c6bb0", "#c98a3e", "#5b8fa3", "#946b53"];
+const MESES_LARGOS = [
+  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+];
+
+const formatoNumero = (valor) => "$" + Math.round(Number(valor) || 0).toLocaleString("es-AR");
+
+const formatoCompacto = (valor) =>
+  new Intl.NumberFormat("es-AR", { notation: "compact", maximumFractionDigits: 1 }).format(
+    Number(valor) || 0
+  );
+
+// "07-2026" -> "Julio 2026" (el mesSeleccionado usa formato mes-año)
+const formatearMesLargo = (clave) => {
+  if (!clave || clave === "todos") return "Todos los meses";
+  const [mes, anio] = clave.split("-");
+  return `${MESES_LARGOS[Number(mes) - 1] || mes} ${anio}`;
+};
 
 export default function DashboardIngresos() {
 
@@ -15,6 +57,7 @@ export default function DashboardIngresos() {
   const [modoVista, setModoVista] = useState("mes");
 
   const [principalesIngresos, setPrincipalesIngresos] = useState([]);
+  const [ingresosPorConcepto, setIngresosPorConcepto] = useState([]);
   const [evolucionIngresos, setEvolucionIngresos] = useState([]);
 const [datosOriginales, setDatosOriginales] = useState([]);
 const [mesSeleccionado, setMesSeleccionado] = useState("todos");
@@ -23,13 +66,6 @@ const [mesSeleccionado, setMesSeleccionado] = useState("todos");
       ? window.innerWidth
       : 1366
   );
-
-  // =====================================================
-  // CANVAS
-  // =====================================================
-
-  const canvasIngresos = useRef(null);
-  const canvasEvolucion = useRef(null);
 
   // =====================================================
   // FECHAS DEFAULT
@@ -121,37 +157,7 @@ const traerDatos = async () => {
   }
 
 };
-  // =====================================================
-  // ANIMACIONES
-  // =====================================================
 
-  useEffect(() => {
-
-    if (principalesIngresos.length) {
-
-      animarIngresos(principalesIngresos);
-
-    } else {
-
-      limpiarCanvas(canvasIngresos.current);
-
-    }
-
-  }, [principalesIngresos, windowWidth]);
-
-  useEffect(() => {
-
-    if (evolucionIngresos.length) {
-
-      animarEvolucion(evolucionIngresos);
-
-    } else {
-
-      limpiarCanvas(canvasEvolucion.current);
-
-    }
-
-  }, [evolucionIngresos, windowWidth]);
 useEffect(() => {
 
   if (!datosOriginales.length) return;
@@ -182,16 +188,22 @@ useEffect(() => {
 
     });
 
-    const ranking =
+    const ingresosOrdenados =
       Object.entries(conceptosMap)
         .map(([concepto, monto]) => ({
           concepto,
           monto
         }))
-        .sort((a, b) => b.monto - a.monto)
-        .slice(0, 10);
+        .sort((a, b) => b.monto - a.monto);
+
+    const ranking = ingresosOrdenados.slice(0, 10);
+
+    const conceptos = ingresosOrdenados
+      .slice(0, 8)
+      .map(({ concepto, monto }) => ({ name: concepto, value: monto }));
 
     setPrincipalesIngresos(ranking);
+    setIngresosPorConcepto(conceptos);
 
     return;
 
@@ -241,18 +253,25 @@ useEffect(() => {
 
   });
 
-  const ranking =
+  const ingresosOrdenados =
     Object.entries(conceptosMap)
       .map(([concepto, monto]) => ({
         concepto,
         monto
       }))
-      .sort((a, b) => b.monto - a.monto)
-      .slice(0, 10);
+      .sort((a, b) => b.monto - a.monto);
+
+  const ranking = ingresosOrdenados.slice(0, 10);
+
+  const conceptos = ingresosOrdenados
+    .slice(0, 8)
+    .map(({ concepto, monto }) => ({ name: concepto, value: monto }));
 
   setPrincipalesIngresos(ranking);
+  setIngresosPorConcepto(conceptos);
 
 }, [mesSeleccionado, datosOriginales]);
+
   // =====================================================
   // HELPERS
   // =====================================================
@@ -277,529 +296,162 @@ const mesesDisponibles = [
 
   )
 ];
-  function limpiarCanvas(canvas) {
-
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  }
-
-  function recortarTexto(ctx, texto, maxWidth) {
-
-    if (
-      ctx.measureText(texto).width <= maxWidth
-    ) {
-      return texto;
-    }
-
-    let resultado = texto;
-
-    while (
-      resultado.length > 0 &&
-      ctx.measureText(resultado + "...")
-        .width > maxWidth
-    ) {
-
-      resultado = resultado.slice(0, -1);
-
-    }
-
-    return resultado + "...";
-
-  }
-
-  // =====================================================
-  // GRAFICO PRINCIPALES INGRESOS
-  // =====================================================
-
-  function animarIngresos(data) {
-
-    const canvas = canvasIngresos.current;
-
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-
-    const max = Math.max(
-      ...data.map((d) => d.monto),
-      1
-    );
-
-    let progreso = 0;
-
-    function frame() {
-
-      ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
-
-      const leftLabel = 10;
-
-      const labelWidth = Math.min(
-        175,
-        canvas.width * 0.32
-      );
-
-      const barStartX = labelWidth + 18;
-
-      const rightPadding = 90;
-
-      const usableBarWidth =
-        canvas.width -
-        barStartX -
-        rightPadding;
-
-      const rowGap = 23;
-
-      const top = 22;
-
-      data.forEach((item, i) => {
-
-        const y = top + i * rowGap;
-
-        const width =
-          (item.monto / max) *
-          usableBarWidth *
-          progreso;
-
-        // fondo
-
-        roundRectCanvas(
-          ctx,
-          barStartX,
-          y,
-          usableBarWidth,
-          14,
-          7,
-          "#E7EEF2"
-        );
-
-        // barra
-
-        roundRectCanvas(
-          ctx,
-          barStartX,
-          y,
-          width,
-          14,
-          7,
-          "#49AF50"
-        );
-
-        // texto
-
-        ctx.fillStyle = "#334155";
-
-        ctx.font = "600 11px Segoe UI";
-
-        const concepto = recortarTexto(
-          ctx,
-          item.concepto,
-          labelWidth - 8
-        );
-
-        ctx.fillText(
-          concepto,
-          leftLabel,
-          y + 11
-        );
-
-        // monto
-
-        ctx.fillStyle = "#111827";
-
-        ctx.font = "700 11px Segoe UI";
-
-        ctx.fillText(
-          "$" +
-            Math.round(item.monto)
-              .toLocaleString("es-AR"),
-          barStartX + width + 8,
-          y + 11
-        );
-
-      });
-
-      progreso += 0.035;
-
-      if (progreso <= 1) {
-
-        requestAnimationFrame(frame);
-
-      }
-
-    }
-
-    frame();
-
-  }
-
-  // =====================================================
-  // GRAFICO EVOLUCION
-  // =====================================================
-
-  function animarEvolucion(data) {
-
-    const canvas = canvasEvolucion.current;
-
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-
-    const max = Math.max(
-      ...data.map((d) => d.total),
-      1
-    );
-
-    let progreso = 0;
-
-    function frame() {
-
-      ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
-
-      const paddingX = 42;
-      const paddingTop = 24;
-      const paddingBottom = 34;
-
-      const usableWidth =
-        canvas.width - paddingX * 2;
-
-      const usableHeight =
-        canvas.height -
-        paddingTop -
-        paddingBottom;
-
-      // GRID
-
-      for (let i = 0; i < 4; i++) {
-
-        const y =
-          paddingTop +
-          (usableHeight / 3) * i;
-
-        ctx.beginPath();
-
-        ctx.moveTo(paddingX, y);
-
-        ctx.lineTo(
-          canvas.width - paddingX,
-          y
-        );
-
-        ctx.strokeStyle = "#DCE7EB";
-
-        ctx.lineWidth = 1;
-
-        ctx.stroke();
-
-      }
-
-      // linea
-
-      ctx.beginPath();
-
-      data.forEach((p, i) => {
-
-        const x =
-          paddingX +
-          (i / (data.length - 1 || 1)) *
-            usableWidth;
-
-        const y =
-          paddingTop +
-          usableHeight -
-          (p.total / max) *
-            usableHeight *
-            progreso;
-
-        if (i === 0) {
-
-          ctx.moveTo(x, y);
-
-        } else {
-
-          ctx.lineTo(x, y);
-
-        }
-
-      });
-
-      ctx.strokeStyle = "#16A34A";
-
-      ctx.lineWidth = 3;
-
-      ctx.stroke();
-
-      // puntos
-
-      data.forEach((p, i) => {
-
-        const x =
-          paddingX +
-          (i / (data.length - 1 || 1)) *
-            usableWidth;
-
-        const y =
-          paddingTop +
-          usableHeight -
-          (p.total / max) *
-            usableHeight *
-            progreso;
-
-        ctx.beginPath();
-
-        ctx.arc(
-          x,
-          y,
-          3.5,
-          0,
-          Math.PI * 2
-        );
-
-        ctx.fillStyle = "#16A34A";
-
-        ctx.fill();
-
-        ctx.fillStyle = "#64748B";
-
-        ctx.font = "600 11px Segoe UI";
-
-      ctx.fillText(
-  p.fecha || p.mes,
-  x - 10,
-  canvas.height - 10
-);
-
-      });
-
-      progreso += 0.035;
-
-      if (progreso <= 1) {
-
-        requestAnimationFrame(frame);
-
-      }
-
-    }
-
-    frame();
-
-  }
 
   // =====================================================
   // MOBILE
   // =====================================================
 
   const isMobile = windowWidth < 900;
+  const isNarrow = windowWidth < 640;
 
   // =====================================================
   // RENDER
   // =====================================================
 
   return (
-    <div style={styles.page}>
+    <div style={{ ...styles.page, padding: isNarrow ? 8 : 12 }}>
 
       <div style={styles.dashboard}>
 
-        {/* ================================================= */}
-        {/* PRINCIPALES INGRESOS */}
-        {/* ================================================= */}
-
-        <SectionCard
-          title="Principales ingresos"
-          subtitle="Ranking de conceptos con mayor impacto en los créditos."
+        <div
+          style={{
+            ...styles.grid,
+            gridTemplateColumns: isMobile ? "1fr" : "1.3fr 1fr",
+            marginBottom: 20,
+          }}
         >
-<div
-  style={{
-    display: "flex",
-    justifyContent: "flex-end",
-    marginBottom: 12
-  }}
->
-
-  <select
-    value={mesSeleccionado}
-    onChange={(e) =>
-      setMesSeleccionado(
-        e.target.value
-      )
-    }
-  >
-
-    <option value="todos">
-      Todos los meses
-    </option>
-
-    {mesesDisponibles.map((mes) => (
-
-      <option
-        key={mes}
-        value={mes}
-      >
-        {mes}
-      </option>
-
-    ))}
-
-  </select>
-
-</div>
-          <div
-            style={{
-              ...styles.grid,
-              gridTemplateColumns: isMobile
-                ? "1fr"
-                : "minmax(290px, 0.95fr) minmax(360px, 1.05fr)",
-            }}
+          {/* PRINCIPALES INGRESOS */}
+          <SectionCard
+            title="Principales ingresos"
+            subtitle="Ranking de conceptos con mayor impacto en los créditos"
+            icon={<TrendingUpIcon />}
+            accent={COLOR_GREEN}
+            isNarrow={isNarrow}
           >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
+              <div style={styles.textoSecundario}>
+                Mostrando: {formatearMesLargo(mesSeleccionado)}
+              </div>
 
-            {/* TABLA */}
-
-            <div style={styles.cardTabla}>
-
-              <table style={styles.table}>
-
-                <thead>
-
-                  <tr>
-                    <th style={styles.th}>
-                      Concepto
-                    </th>
-
-                    <th style={styles.th}>
-                      Monto
-                    </th>
-                  </tr>
-
-                </thead>
-
-                <tbody>
-
-                  {principalesIngresos.map(
-                    (e, i) => (
-
-                      <tr key={i}>
-
-                        <td style={styles.td}>
-                          {e.concepto}
-                        </td>
-
-                        <td style={styles.tdMonto}>
-                          $
-                          {Math.round(e.monto)
-                            .toLocaleString(
-                              "es-AR"
-                            )}
-                        </td>
-
-                      </tr>
-
-                    )
-                  )}
-
-                </tbody>
-
-              </table>
-
+              <select
+                style={selectStyle(isNarrow)}
+                value={mesSeleccionado}
+                onChange={(e) => setMesSeleccionado(e.target.value)}
+              >
+                <option value="todos">Todos los meses</option>
+                {mesesDisponibles.map((mes) => (
+                  <option key={mes} value={mes}>{mes}</option>
+                ))}
+              </select>
             </div>
 
-            {/* GRAFICO */}
+            <div style={{ flex: 1, minHeight: Math.max(220, principalesIngresos.length * 30) }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={principalesIngresos}
+                  layout="vertical"
+                  margin={{ top: 5, right: isNarrow ? 16 : 40, left: 10, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#eef2f5" />
+                  <XAxis type="number" tickFormatter={formatoCompacto} tick={{ fontSize: isNarrow ? 10 : 11, fontFamily: FONT_FORMAL }} />
+                  <YAxis
+                    type="category"
+                    dataKey="concepto"
+                    width={isNarrow ? 90 : isMobile ? 110 : 170}
+                    tick={{ fontSize: isNarrow ? 10 : 11.5, fontFamily: FONT_FORMAL }}
+                  />
+                  <Tooltip formatter={(value) => formatoNumero(value)} />
+                  <Bar dataKey="monto" radius={[0, 6, 6, 0]}>
+                    {principalesIngresos.map((entry) => (
+                      <Cell key={entry.concepto} fill={COLOR_GREEN} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </SectionCard>
 
-            <div style={styles.cardGrafico}>
-
-              <canvas
-                ref={canvasIngresos}
-                width={560}
-                height={290}
-                style={styles.canvasResponsive}
-              />
-
+          {/* INGRESOS POR CONCEPTO */}
+          <SectionCard
+            title="Ingresos por concepto"
+            subtitle="Distribución de los créditos por concepto"
+            icon={<ReceiptLongIcon />}
+            accent={COLOR_NAVY}
+            isNarrow={isNarrow}
+          >
+            <div style={{ marginBottom: 10 }}>
+              <div style={styles.textoSecundario}>
+                Mostrando: {formatearMesLargo(mesSeleccionado)}
+              </div>
             </div>
 
-          </div>
+            <div style={{ flex: 1, minHeight: 220 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={ingresosPorConcepto}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={isNarrow ? 40 : 55}
+                    outerRadius={isNarrow ? 65 : 85}
+                    paddingAngle={2}
+                  >
+                    {ingresosPorConcepto.map((entry, index) => (
+                      <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => formatoNumero(value)} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </SectionCard>
+        </div>
 
-        </SectionCard>
-
-        {/* ================================================= */}
         {/* EVOLUCION */}
-        {/* ================================================= */}
-
         <SectionCard
           title="Evolución de ingresos"
-          subtitle="Comportamiento de ingresos en el tiempo."
+          subtitle="Comportamiento de ingresos en el tiempo"
+          icon={<ShowChartIcon />}
+          accent={COLOR_TEAL}
+          isNarrow={isNarrow}
         >
+          <div style={filtroWrapStyle(isNarrow)}>
+            <div style={filtroGrupoStyle(isNarrow)}>
+              <input type="date" style={inputStyle(isNarrow)} value={fechaDesde} onChange={(e) => setFechaDesde(e.target.value)} />
+              <input type="date" style={inputStyle(isNarrow)} value={fechaHasta} onChange={(e) => setFechaHasta(e.target.value)} />
+            </div>
 
-          <div
-            style={{
-              display: "flex",
-              gap: 10,
-              marginBottom: 10,
-              flexWrap: "wrap",
-            }}
-          >
-
-            <input
-              type="date"
-              value={fechaDesde}
-              onChange={(e) =>
-                setFechaDesde(
-                  e.target.value
-                )
-              }
-            />
-
-            <input
-              type="date"
-              value={fechaHasta}
-              onChange={(e) =>
-                setFechaHasta(
-                  e.target.value
-                )
-              }
-            />
-
-            <select
-              value={modoVista}
-              onChange={(e) =>
-                setModoVista(
-                  e.target.value
-                )
-              }
-            >
-              <option value="dia">
-                Día
-              </option>
-
-              <option value="mes">
-                Mes
-              </option>
-
+            <select style={selectStyle(isNarrow)} value={modoVista} onChange={(e) => setModoVista(e.target.value)}>
+              <option value="dia">Por día</option>
+              <option value="mes">Por mes</option>
             </select>
-
           </div>
 
-          <div style={styles.cardGraficoGrande}>
-
-            <canvas
-              ref={canvasEvolucion}
-              width={820}
-              height={230}
-              style={styles.canvasResponsive}
-            />
-
+          <div style={{ height: 260 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={evolucionIngresos} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
+                <defs>
+                  <linearGradient id="gradIngresosResumen6" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={COLOR_TEAL} stopOpacity={0.28} />
+                    <stop offset="100%" stopColor={COLOR_TEAL} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef2f5" />
+                <XAxis dataKey={(d) => d.fecha || d.mes} tick={{ fontSize: isNarrow ? 10 : 11, fontFamily: FONT_FORMAL }} />
+                <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 10, fontFamily: FONT_FORMAL }} width={50} />
+                <Tooltip formatter={(value) => formatoNumero(value)} />
+                <Area
+                  type="monotone"
+                  dataKey="total"
+                  name="Ingresos"
+                  stroke={COLOR_TEAL}
+                  strokeWidth={2.5}
+                  fill="url(#gradIngresosResumen6)"
+                  dot={{ r: 2.5, fill: COLOR_TEAL }}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
           </div>
-
         </SectionCard>
 
       </div>
@@ -812,117 +464,26 @@ const mesesDisponibles = [
 // COMPONENTES
 // =====================================================
 
-function SectionCard({
-  title,
-  subtitle,
-  children,
-}) {
-
+function SectionCard({ title, subtitle, icon, accent = COLOR_TEAL, isNarrow, children }) {
   return (
-
     <div style={styles.section}>
-
-      <div style={styles.sectionHeaderGradient}>
-
-        <div style={styles.sectionHeaderTextWrap}>
-
-          <div style={styles.sectionEyebrow}>
-            RESUMEN
+      <div style={{ ...styles.sectionHeader, padding: isNarrow ? "14px 14px 12px" : styles.sectionHeader.padding }}>
+        {icon && (
+          <div style={{ ...styles.sectionIcon, background: `${accent}1a`, color: accent }}>
+            {icon}
           </div>
-
-          <h3 style={styles.sectionTitle}>
-            {title}
-          </h3>
-
-          {subtitle ? (
-
-            <div style={styles.sectionSubtitle}>
-              {subtitle}
-            </div>
-
-          ) : null}
-
+        )}
+        <div style={{ minWidth: 0 }}>
+          <h3 style={styles.sectionTitle}>{title}</h3>
+          {subtitle && <div style={styles.sectionSubtitle}>{subtitle}</div>}
         </div>
-
       </div>
 
-      <div style={styles.sectionBody}>
+      <div style={{ ...styles.sectionBody, padding: isNarrow ? "0 14px 16px" : styles.sectionBody.padding }}>
         {children}
       </div>
-
     </div>
-
   );
-
-}
-
-function roundRectCanvas(
-  ctx,
-  x,
-  y,
-  width,
-  height,
-  radius,
-  fillStyle
-) {
-
-  if (width <= 0 || height <= 0) return;
-
-  const r = Math.min(
-    radius,
-    width / 2,
-    height / 2
-  );
-
-  ctx.beginPath();
-
-  ctx.moveTo(x + r, y);
-
-  ctx.lineTo(x + width - r, y);
-
-  ctx.quadraticCurveTo(
-    x + width,
-    y,
-    x + width,
-    y + r
-  );
-
-  ctx.lineTo(
-    x + width,
-    y + height - r
-  );
-
-  ctx.quadraticCurveTo(
-    x + width,
-    y + height,
-    x + width - r,
-    y + height
-  );
-
-  ctx.lineTo(x + r, y + height);
-
-  ctx.quadraticCurveTo(
-    x,
-    y + height,
-    x,
-    y + height - r
-  );
-
-  ctx.lineTo(x, y + r);
-
-  ctx.quadraticCurveTo(
-    x,
-    y,
-    x + r,
-    y
-  );
-
-  ctx.closePath();
-
-  ctx.fillStyle = fillStyle;
-
-  ctx.fill();
-
 }
 
 // =====================================================
@@ -933,143 +494,140 @@ const styles = {
 
   page: {
     width: "100%",
+    minWidth: 0,
     padding: 12,
-    background:
-      "linear-gradient(180deg, #f4f7fb 0%, #eef3f8 100%)",
+    boxSizing: "border-box",
+    background: "#f4f7f9",
+    fontFamily: FONT_FORMAL,
   },
 
   dashboard: {
-    fontFamily:
-      "Segoe UI, Inter, sans-serif",
     width: "100%",
-    maxWidth: 1180,
-    margin: "0 auto",
+    minWidth: 0,
+    boxSizing: "border-box",
   },
 
   section: {
-    background:
-      "rgba(255,255,255,0.96)",
-    borderRadius: 22,
-    marginBottom: 14,
-    boxShadow:
-      "0 14px 28px rgba(15,23,42,0.05)",
-    border:
-      "1px solid rgba(11,79,108,0.08)",
+    background: "#fff",
+    borderRadius: 18,
+    marginBottom: 20,
+    boxShadow: "0 6px 18px rgba(8,59,92,0.07)",
+    border: "1px solid rgba(8,59,92,0.06)",
     overflow: "hidden",
+    display: "flex",
+    flexDirection: "column",
   },
 
-  sectionHeaderGradient: {
-    background: headerGradient,
-    padding: "16px 18px",
-    color: "#fff",
+  sectionHeader: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    padding: "18px 20px 14px",
   },
 
-  sectionHeaderTextWrap: {
-    minWidth: 0,
-  },
-
-  sectionEyebrow: {
-    fontSize: 10,
-    fontWeight: 800,
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    marginBottom: 4,
+  sectionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
   },
 
   sectionTitle: {
     margin: 0,
-    fontSize: 18,
-    fontWeight: 800,
-    color: "#fff",
+    fontSize: 16,
+    fontWeight: 700,
+    color: COLOR_NAVY,
   },
 
   sectionSubtitle: {
-    marginTop: 5,
-    fontSize: 13,
-    color: "rgba(255,255,255,0.92)",
+    marginTop: 2,
+    fontSize: 12,
+    color: "#64748B",
+    fontWeight: 500,
   },
 
   sectionBody: {
-    padding: 14,
+    padding: "0 20px 20px",
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+    minHeight: 0,
   },
 
   grid: {
     display: "grid",
-    gap: 14,
-    alignItems: "start",
+    gap: 20,
+    alignItems: "stretch",
   },
 
-  cardTabla: {
-    overflow: "auto",
-    border:
-      "1px solid rgba(148,163,184,0.18)",
-    borderRadius: 14,
+  filtroGrupo: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+
+  textoSecundario: {
+    fontSize: 12,
+    color: COLOR_GREEN,
+    fontWeight: 600,
+    background: "rgba(21, 128, 61, 0.1)",
+    padding: "6px 12px",
+    borderRadius: 999,
+  },
+
+  input: {
+    padding: "6px 9px",
+    borderRadius: 9,
+    border: "1px solid rgba(8,59,92,0.16)",
+    fontSize: 12.5,
+    fontFamily: FONT_FORMAL,
+    color: COLOR_NAVY,
+    outline: "none",
+  },
+
+  select: {
+    padding: "6px 9px",
+    borderRadius: 9,
+    border: "1px solid rgba(8,59,92,0.16)",
     background: "#fff",
-    maxHeight: 250,
-  },
-
-  cardGrafico: {
-    background:
-      "linear-gradient(180deg, #fbfdff 0%, #f4f7fb 100%)",
-    padding: 10,
-    borderRadius: 16,
-    overflow: "hidden",
-    border:
-      "1px solid rgba(148,163,184,0.14)",
-  },
-
-  cardGraficoGrande: {
-    background:
-      "linear-gradient(180deg, #fbfdff 0%, #f4f7fb 100%)",
-    padding: 10,
-    borderRadius: 16,
-    width: "100%",
-    overflow: "hidden",
-    border:
-      "1px solid rgba(148,163,184,0.14)",
-  },
-
-  canvasResponsive: {
-    width: "100%",
-    maxWidth: "100%",
-    height: "auto",
-    display: "block",
-  },
-
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
     fontSize: 12.5,
-    color: "#0F172A",
-    minWidth: 300,
-  },
-
-  th: {
-    textAlign: "left",
-    padding: "9px 12px",
-    borderBottom: "1px solid #E5E7EB",
-    background: "#F8FAFC",
-    position: "sticky",
-    top: 0,
-    zIndex: 1,
-    fontSize: 12.5,
-    fontWeight: 800,
-    color: "#334155",
-  },
-
-  td: {
-    padding: "9px 12px",
-    borderBottom: "1px solid #F1F5F9",
-    fontSize: 12.5,
-  },
-
-  tdMonto: {
-    padding: "9px 12px",
-    borderBottom: "1px solid #F1F5F9",
-    fontSize: 12.5,
-    fontWeight: 700,
-    color: "#0F172A",
-    whiteSpace: "nowrap",
+    fontFamily: FONT_FORMAL,
+    fontWeight: 500,
+    color: COLOR_NAVY,
+    outline: "none",
+    cursor: "pointer",
   },
 
 };
+
+function filtroWrapStyle(isNarrow) {
+  return {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: isNarrow ? "stretch" : "center",
+    flexDirection: isNarrow ? "column" : "row",
+    gap: 10,
+    flexWrap: "wrap",
+    marginBottom: 14,
+  };
+}
+
+function filtroGrupoStyle(isNarrow) {
+  return {
+    ...styles.filtroGrupo,
+    flexDirection: isNarrow ? "column" : "row",
+    alignItems: isNarrow ? "stretch" : "center",
+  };
+}
+
+function inputStyle(isNarrow) {
+  return { ...styles.input, width: isNarrow ? "100%" : undefined, boxSizing: "border-box" };
+}
+
+function selectStyle(isNarrow) {
+  return { ...styles.select, width: isNarrow ? "100%" : undefined, boxSizing: "border-box" };
+}

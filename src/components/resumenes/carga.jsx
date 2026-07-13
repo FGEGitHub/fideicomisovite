@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import servicionivel3 from "../../services/nivel3";
 import SubirExcelMovimientos from "./subierexce";
 import Tabla from "./tablamovimientos";
+import MovimientosDashboard from "./MovimientosDashboard";
 
 import {
   Box,
@@ -14,6 +15,12 @@ import {
   Collapse,
   Modal,
 } from "@mui/material";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
+
+const COLOR_NAVY = "#083b5c";
+const COLOR_TEAL = "#148D8D";
 
 export default function FormMovimiento() {
   const [mostrarForm, setMostrarForm] = useState(false);
@@ -72,148 +79,82 @@ export default function FormMovimiento() {
 
   return (
     <>
-     {/* HEADER PREMIUM */}
-<Box
-  sx={{
-    borderRadius: "22px",
-    overflow: "hidden",
-    mb: 2,
-    background:
-      "linear-gradient(90deg,#083b5c 0%, #0b5c76 55%, #148a8f 100%)",
-    boxShadow: "0 10px 28px rgba(0,0,0,0.10)",
-  }}
->
-  <Box
-    sx={{
-      px: 2.5,
-      py: 2,
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      gap: 2,
-      flexWrap: "wrap",
-    }}
-  >
-    {/* IZQUIERDA */}
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        gap: 1.8,
-      }}
-    >
-      {/* ICONO */}
+      {/* HEADER */}
       <Box
         sx={{
-          width: 56,
-          height: 56,
-          borderRadius: "18px",
-          background: "rgba(255,255,255,0.12)",
           display: "flex",
+          justifyContent: "space-between",
           alignItems: "center",
-          justifyContent: "center",
-          border: "1px solid rgba(255,255,255,0.15)",
+          gap: 2,
+          mb: 2.5,
+          flexWrap: "wrap",
         }}
       >
-        <Typography sx={{ fontSize: 26 }}>
-          💳
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, minWidth: 0 }}>
+          <Box
+            sx={{
+              width: 46,
+              height: 46,
+              borderRadius: "14px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              background: `${COLOR_TEAL}1a`,
+              color: COLOR_TEAL,
+            }}
+          >
+            <AccountBalanceWalletIcon />
+          </Box>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography fontWeight={800} fontSize={21} color={COLOR_NAVY} noWrap>
+              Movimientos
+            </Typography>
+            <Typography color="text.secondary" fontSize={13}>
+              Gestión y control general
+            </Typography>
+          </Box>
+        </Box>
+
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.2, flexWrap: "wrap" }}>
+          <Button
+            onClick={() => setOpenExcel(true)}
+            startIcon={<UploadFileIcon />}
+            sx={{
+              borderRadius: 2.5,
+              textTransform: "none",
+              fontWeight: 700,
+              fontSize: 13,
+              px: 1.75,
+              height: 40,
+              color: COLOR_NAVY,
+              border: "1px solid rgba(8,59,92,0.14)",
+              "&:hover": { background: "rgba(8,59,92,0.06)" },
+            }}
+          >
+            Cargar Excel
+          </Button>
+
+          <Button
+            onClick={() => setMostrarForm(true)}
+            variant="contained"
+            startIcon={<AddCircleIcon />}
+            sx={{
+              borderRadius: 2.5,
+              textTransform: "none",
+              fontWeight: 700,
+              fontSize: 13,
+              px: 2,
+              height: 40,
+              background: COLOR_TEAL,
+              boxShadow: "0 8px 18px rgba(20,141,141,0.28)",
+              "&:hover": { background: "#117C85", boxShadow: "0 8px 18px rgba(20,141,141,0.34)" },
+            }}
+          >
+            Registrar movimiento
+          </Button>
+        </Box>
       </Box>
-
-      {/* TITULOS */}
-      <Box>
-        <Typography
-          sx={{
-            color: "#fff",
-            fontWeight: 800,
-            fontSize: 24,
-            lineHeight: 1,
-          }}
-        >
-          Movimientos
-        </Typography>
-
-        <Typography
-          sx={{
-            color: "rgba(255,255,255,0.82)",
-            fontSize: 13,
-            mt: 0.6,
-          }}
-        >
-          Gestión y control de ingresos y egresos
-        </Typography>
-      </Box>
-    </Box>
-
-    {/* DERECHA */}
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        gap: 1.2,
-        ml: "auto",
-        flexWrap: "wrap",
-      }}
-    >
-      {/* CANTIDAD */}
-    
-
-      {/* BOTON EXCEL */}
-      <Button
-        onClick={() => setOpenExcel(true)}
-        variant="contained"
-        sx={{
-          borderRadius: 2,
-          textTransform: "none",
-          fontWeight: 900,
-          px: 2,
-          height: 42,
-          fontSize: 14,
-
-          backgroundColor: "rgba(255,255,255,0.16)",
-          color: "#fff",
-
-          border: "1px solid rgba(255,255,255,0.25)",
-
-          boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
-
-          "&:hover": {
-            backgroundColor: "rgba(255,255,255,0.24)",
-          },
-        }}
-      >
-        📊 Cargar Excel
-      </Button>
-
-      {/* BOTON MOVIMIENTO */}
-     <Button
-  onClick={() => setMostrarForm(true)}
-        variant="contained"
-        sx={{
-          borderRadius: 2,
-          textTransform: "none",
-          fontWeight: 900,
-          px: 2,
-          height: 42,
-          fontSize: 14,
-
-          backgroundColor: "rgba(255,255,255,0.16)",
-          color: "#fff",
-
-          border: "1px solid rgba(255,255,255,0.25)",
-
-          boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
-
-          "&:hover": {
-            backgroundColor: "rgba(255,255,255,0.24)",
-          },
-        }}
-      >
-        ➕ Registrar movimiento
-      </Button>
-    </Box>
-  </Box>
-</Box>
 
       {/* MODAL EXCEL */}
 {/* MODAL EXCEL */}
@@ -440,6 +381,20 @@ export default function FormMovimiento() {
     </Card>
   </Box>
 </Modal>
+
+      {/* ANÁLISIS DE MOVIMIENTOS — panel propio con scroll acotado, no afecta el layout de la tabla */}
+      <Box
+        sx={{
+          maxHeight: { xs: "60vh", md: "52vh" },
+          overflowY: "auto",
+          overflowX: "hidden",
+          mb: 2,
+          pr: 0.5,
+          flexShrink: 0,
+        }}
+      >
+        <MovimientosDashboard />
+      </Box>
 
       {/* TABLA */}
       <Tabla />

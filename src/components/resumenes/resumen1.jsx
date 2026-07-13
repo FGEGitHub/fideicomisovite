@@ -1,106 +1,125 @@
 import React, { useEffect, useRef, useState } from "react";
 import servicionivel3 from "../../services/nivel3";
 
-const headerGradient =
-  "linear-gradient(90deg, #0a3b4f 0%, #0b4f6c 55%, #148D8D 100%)";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import TrendingDownIcon from "@mui/icons-material/TrendingDown";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import PercentIcon from "@mui/icons-material/Percent";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  BarChart,
+  Bar,
+  Area,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  Cell,
+} from "recharts";
+
+const COLOR_NAVY = "#083b5c";
+const COLOR_TEAL = "#148D8D";
+const COLOR_GREEN = "#15803d";
+const COLOR_RED = "#dc2626";
+const FONT_FORMAL = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+
+const formatoNumero = (valor) => "$" + Math.round(Number(valor) || 0).toLocaleString("es-AR");
+
+const formatoCompacto = (valor) =>
+  new Intl.NumberFormat("es-AR", { notation: "compact", maximumFractionDigits: 1 }).format(
+    Number(valor) || 0
+  );
 
 const styles = {
   dashboard: {
-    fontFamily: "Segoe UI, Inter, sans-serif",
-    background: "linear-gradient(180deg, #f4f7fb 0%, #eef3f8 100%)",
+    fontFamily: FONT_FORMAL,
+    background: "#f4f7f9",
     padding: 24,
     minHeight: "100vh",
     boxSizing: "border-box",
   },
 
-  hero: {
-    background: headerGradient,
-    borderRadius: 24,
-    padding: "22px 26px",
-    marginBottom: 22,
-    color: "#fff",
-    boxShadow: "0 20px 45px rgba(11, 79, 108, 0.18)",
-    border: "1px solid rgba(255,255,255,0.10)",
-  },
-
-  heroEyebrow: {
-    fontSize: 12,
-    fontWeight: 800,
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    opacity: 0.9,
-    marginBottom: 6,
-  },
-
-  titulo: {
-    margin: 0,
-    fontSize: 34,
-    fontWeight: 800,
-    lineHeight: 1.1,
-  },
-
-  heroSub: {
-    marginTop: 8,
-    fontSize: 15,
-    color: "rgba(255,255,255,0.92)",
-  },
-
   seccion: {
-    background: "rgba(255,255,255,0.92)",
-    borderRadius: 22,
+    background: "#fff",
+    borderRadius: 18,
     marginBottom: 22,
-    boxShadow: "0 16px 36px rgba(15, 23, 42, 0.06)",
-    border: "1px solid rgba(11,79,108,0.08)",
+    boxShadow: "0 6px 18px rgba(8,59,92,0.07)",
+    border: "1px solid rgba(8,59,92,0.06)",
     overflow: "hidden",
-    backdropFilter: "blur(10px)",
   },
 
   seccionHeader: {
-    background: headerGradient,
-    padding: "16px 20px",
-    color: "#fff",
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    padding: "20px 22px 16px",
+  },
+
+  seccionIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
   },
 
   seccionBody: {
-    padding: 20,
+    padding: "0 22px 22px",
   },
 
   subtitulo: {
     margin: 0,
-    fontSize: 22,
-    fontWeight: 800,
-    color: "#fff",
+    fontSize: 17,
+    fontWeight: 700,
+    letterSpacing: 0.1,
+    color: COLOR_NAVY,
   },
 
   subtituloSecundario: {
-    marginTop: 4,
-    fontSize: 13,
-    color: "rgba(255,255,255,0.9)",
+    marginTop: 2,
+    fontSize: 12.5,
+    color: "#64748B",
     fontWeight: 600,
   },
 
   kpis: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-    gap: 16,
+    gap: 14,
+    marginBottom: 18,
   },
 
   graficos: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
-    gap: 18,
+    gap: 16,
   },
 
   cardGrafico: {
-    background: "linear-gradient(180deg, #ffffff 0%, #f7fbfd 100%)",
-    borderRadius: 18,
-    padding: 14,
-    border: "1px solid rgba(148,163,184,0.12)",
-    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.85)",
+    background: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    border: "1px solid rgba(8,59,92,0.08)",
+    boxShadow: "0 4px 14px rgba(8,59,92,0.05)",
+  },
+
+  chartTitulo: {
+    fontSize: 13,
+    fontWeight: 600,
+    color: COLOR_NAVY,
+    marginBottom: 8,
   },
 
   chartInner: {
-    height: 290,
+    height: 280,
     width: "100%",
   },
 
@@ -116,88 +135,100 @@ const styles = {
   filtroGrupo: {
     display: "flex",
     alignItems: "center",
-    gap: 12,
+    gap: 10,
     flexWrap: "wrap",
   },
 
   label: {
-    fontSize: 14,
-    fontWeight: 700,
-    color: "#0F172A",
+    fontSize: 13,
+    fontWeight: 600,
+    color: COLOR_NAVY,
   },
 
   select: {
-    padding: "12px 14px",
-    borderRadius: 14,
-    border: "1px solid rgba(11,79,108,0.12)",
+    padding: "10px 14px",
+    borderRadius: 12,
+    border: "1px solid rgba(8,59,92,0.16)",
     background: "#fff",
-    minWidth: 230,
+    minWidth: 210,
     outline: "none",
     cursor: "pointer",
-    fontSize: 14,
-    fontWeight: 600,
-    color: "#0F172A",
-    boxShadow: "0 8px 18px rgba(15,23,42,0.04)",
+    fontSize: 13.5,
+    fontWeight: 500,
+    color: COLOR_NAVY,
   },
 
   textoSecundario: {
-    fontSize: 14,
-    color: "#0b4f6c",
-    fontWeight: 700,
+    fontSize: 12.5,
+    color: COLOR_TEAL,
+    fontWeight: 600,
     background: "rgba(20, 141, 141, 0.08)",
-    padding: "10px 14px",
+    padding: "8px 14px",
     borderRadius: 999,
-    border: "1px solid rgba(20,141,141,0.10)",
   },
 
   sinDatos: {
     textAlign: "center",
     padding: "34px 12px",
     color: "#64748B",
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: 600,
     background: "#fff",
-    borderRadius: 16,
-    border: "1px dashed rgba(148,163,184,0.28)",
+    borderRadius: 14,
+    border: "1px dashed rgba(148,163,184,0.3)",
   },
 
   kpiCard: {
-    background: "rgba(255,255,255,0.96)",
-    borderRadius: 18,
-    padding: 18,
-    boxShadow: "0 14px 30px rgba(15,23,42,0.05)",
-    border: "1px solid rgba(11,79,108,0.08)",
+    background: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    boxShadow: "0 6px 18px rgba(8,59,92,0.07)",
+    border: "1px solid rgba(8,59,92,0.06)",
     minWidth: 0,
-    position: "relative",
-    overflow: "hidden",
   },
 
-  kpiAccent: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 5,
+  kpiIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 13,
+    flexShrink: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   kpiLabel: {
-    fontSize: 13,
+    fontSize: 11.5,
     color: "#64748B",
-    fontWeight: 700,
-    marginTop: 6,
+    fontWeight: 600,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
   },
 
   kpiValue: {
-    fontSize: 34,
-    fontWeight: 800,
-    marginTop: 10,
-    color: "#0F172A",
-    lineHeight: 1.1,
+    fontSize: 19,
+    fontWeight: 700,
+    marginTop: 2,
+    color: COLOR_NAVY,
+    lineHeight: 1.15,
     wordBreak: "break-word",
   },
 };
 
-const GOOGLE_CHARTS_SRC = "https://www.gstatic.com/charts/loader.js";
+// Adapta el saldoArray (formato tabla: [encabezados, ...filas]) que ya devuelven
+// calcularResumenGeneral/calcularResumenPorPeriodo al formato de objetos que usa Recharts.
+// No recalcula nada, solo reordena los mismos valores ya calculados.
+function convertirSaldoArray(saldoArray) {
+  return saldoArray.slice(1).map(([label, saldo, ingresos, egresos]) => ({
+    label,
+    saldo,
+    ingresos,
+    egresos,
+  }));
+}
 
 function normalizarAnio(anio) {
   const texto = String(anio || "").trim();
@@ -352,8 +383,10 @@ export default function PanelFinanciero() {
   const [ingresosMesAnim, setIngresosMesAnim] = useState(0);
   const [egresosMesAnim, setEgresosMesAnim] = useState(0);
 
+  const [datosGeneral, setDatosGeneral] = useState([]);
+  const [datosMes, setDatosMes] = useState([]);
+
   const timersRef = useRef({});
-  const chartsPromiseRef = useRef(null);
 
   useEffect(() => {
     traerDatos();
@@ -369,8 +402,7 @@ export default function PanelFinanciero() {
       setEgresosGenerales(0);
       setIngresosGeneralesAnim(0);
       setEgresosGeneralesAnim(0);
-      limpiarGrafico("graficoBarrasGeneral");
-      limpiarGrafico("graficoLineaGeneral");
+      setDatosGeneral([]);
       return;
     }
 
@@ -382,11 +414,7 @@ export default function PanelFinanciero() {
     animarNumero(resumenGeneral.totalIngresos, setIngresosGeneralesAnim, "ingGeneral");
     animarNumero(resumenGeneral.totalEgresos, setEgresosGeneralesAnim, "egGeneral");
 
-    dibujarGraficosGenerales(
-      resumenGeneral.totalIngresos,
-      resumenGeneral.totalEgresos,
-      resumenGeneral.saldoArray
-    );
+    setDatosGeneral(convertirSaldoArray(resumenGeneral.saldoArray));
   }, [movimientos]);
 
   useEffect(() => {
@@ -395,8 +423,7 @@ export default function PanelFinanciero() {
       setEgresosMes(0);
       setIngresosMesAnim(0);
       setEgresosMesAnim(0);
-      limpiarGrafico("graficoBarrasMes");
-      limpiarGrafico("graficoLineaMes");
+      setDatosMes([]);
       return;
     }
 
@@ -408,11 +435,7 @@ export default function PanelFinanciero() {
     animarNumero(resumenMes.totalIngresos, setIngresosMesAnim, "ingMes");
     animarNumero(resumenMes.totalEgresos, setEgresosMesAnim, "egMes");
 
-    dibujarGraficosMes(
-      resumenMes.totalIngresos,
-      resumenMes.totalEgresos,
-      resumenMes.saldoArray
-    );
+    setDatosMes(convertirSaldoArray(resumenMes.saldoArray));
   }, [movimientos, periodoSeleccionado]);
 
   const traerDatos = async () => {
@@ -581,148 +604,6 @@ export default function PanelFinanciero() {
     saldoArray,
   };
 }
-  function limpiarGrafico(id) {
-    const nodo = document.getElementById(id);
-    if (nodo) nodo.innerHTML = "";
-  }
-
-  function cargarGoogleCharts() {
-    if (window.google?.visualization) {
-      return Promise.resolve();
-    }
-
-    if (chartsPromiseRef.current) {
-      return chartsPromiseRef.current;
-    }
-
-    chartsPromiseRef.current = new Promise((resolve, reject) => {
-      const iniciar = () => {
-        if (!window.google?.charts) {
-          reject(new Error("No se pudo iniciar Google Charts"));
-          return;
-        }
-
-        window.google.charts.load("current", { packages: ["corechart"] });
-        window.google.charts.setOnLoadCallback(() => resolve());
-      };
-
-      const scriptExistente = document.querySelector(`script[src="${GOOGLE_CHARTS_SRC}"]`);
-
-      if (scriptExistente) {
-        if (window.google?.charts) {
-          iniciar();
-        } else {
-          scriptExistente.addEventListener("load", iniciar, { once: true });
-          scriptExistente.addEventListener("error", reject, { once: true });
-        }
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.src = GOOGLE_CHARTS_SRC;
-      script.onload = iniciar;
-      script.onerror = reject;
-      document.body.appendChild(script);
-    });
-
-    return chartsPromiseRef.current;
-  }
-
-  async function dibujarGraficosGenerales(ingresos, egresos, saldoArray) {
-    try {
-      await cargarGoogleCharts();
-
-      const resultado = ingresos - egresos;
-
- const dataBar = window.google.visualization.arrayToDataTable([
-  ["Concepto", "Monto", { role: "style" }],
-  ["Ingresos", ingresos, "#22C55E"], // verde
-  ["Egresos", egresos, "#EF4444"],   // rojo
-  ["Resultado", resultado, "#0B4F6C"], // azul
-]);
-
-      const chartBar = new window.google.visualization.ColumnChart(
-        document.getElementById("graficoBarrasGeneral")
-      );
-
-      chartBar.draw(dataBar, {
-        legend: { position: "none" },
-        animation: { startup: true, duration: 900 },
-        chartArea: { width: "80%", height: "70%" },
-        backgroundColor: "transparent",
-     colors: ["#22C55E", "#EF4444", "#0B4F6C"],
-      });
-
-      const dataLine = window.google.visualization.arrayToDataTable(saldoArray);
-
-      const chartLine = new window.google.visualization.LineChart(
-        document.getElementById("graficoLineaGeneral")
-      );
-
-      chartLine.draw(dataLine, {
-    
-        curveType: "function",
-        animation: { startup: true, duration: 900 },
-        chartArea: { width: "85%", height: "70%" },
-        backgroundColor: "transparent",
-       legend: { position: "top" },
-colors: ["#0B4F6C", "#22C55E", "#EF4444"],
-
-series: {
-  0: { lineWidth: 4 }, // saldo
-  1: { lineWidth: 2 }, // ingresos
-  2: { lineWidth: 2 }, // egresos
-},
-      });
-    } catch (error) {
-      console.error("Error al dibujar gráficos generales:", error);
-    }
-  }
-
-  async function dibujarGraficosMes(ingresos, egresos, saldoArray) {
-    try {
-      await cargarGoogleCharts();
-
-      const resultado = ingresos - egresos;
-
-  const dataBar = window.google.visualization.arrayToDataTable([
-  ["Concepto", "Monto", { role: "style" }],
-  ["Ingresos", ingresos, "#22C55E"], // verde
-  ["Egresos", egresos, "#EF4444"],   // rojo
-  ["Resultado", resultado, "#0B4F6C"], // azul
-]);
-
-      const chartBar = new window.google.visualization.ColumnChart(
-        document.getElementById("graficoBarrasMes")
-      );
-
-      chartBar.draw(dataBar, {
-        legend: { position: "none" },
-        animation: { startup: true, duration: 900 },
-        chartArea: { width: "80%", height: "70%" },
-        backgroundColor: "transparent",
-      colors: ["#22C55E", "#EF4444", "#0B4F6C"],
-      });
-
-      const dataLine = window.google.visualization.arrayToDataTable(saldoArray);
-
-      const chartLine = new window.google.visualization.LineChart(
-        document.getElementById("graficoLineaMes")
-      );
-
-      chartLine.draw(dataLine, {
-        legend: "none",
-        curveType: "function",
-        animation: { startup: true, duration: 900 },
-        chartArea: { width: "85%", height: "70%" },
-        backgroundColor: "transparent",
-      colors: ["#0B4F6C", "#22C55E", "#EF4444"],
-      });
-    } catch (error) {
-      console.error("Error al dibujar gráficos por mes:", error);
-    }
-  }
-
   const resultadoGeneral = ingresosGenerales - egresosGenerales;
   const proporcionGeneral =
     ingresosGenerales > 0 ? ((egresosGenerales / ingresosGenerales) * 100).toFixed(2) : 0;
@@ -731,45 +612,60 @@ series: {
   const proporcionMes =
     ingresosMes > 0 ? ((egresosMes / ingresosMes) * 100).toFixed(2) : 0;
 
+  const datosBarraGeneral = [
+    { concepto: "Ingresos", monto: ingresosGenerales, fill: COLOR_GREEN },
+    { concepto: "Egresos", monto: egresosGenerales, fill: COLOR_RED },
+    { concepto: "Resultado", monto: resultadoGeneral, fill: "#0B4F6C" },
+  ];
+
+  const datosBarraMes = [
+    { concepto: "Ingresos", monto: ingresosMes, fill: COLOR_GREEN },
+    { concepto: "Egresos", monto: egresosMes, fill: COLOR_RED },
+    { concepto: "Resultado", monto: resultadoMes, fill: "#0B4F6C" },
+  ];
+
   return (
     <div style={styles.dashboard}>
-      
-
       <SectionCard
-        title="Analisis Financiero GENERAL"
+        title="Análisis Anual"
         subtitle="Totales acumulados de todos los extractos cargados"
+        icon={<AssessmentIcon />}
       >
         <div style={styles.kpis}>
-          <Card titulo="Ingresos" valor={ingresosGeneralesAnim} color="#22C55E" />
-          <Card titulo="Egresos" valor={egresosGeneralesAnim} color="#EF4444" />
+          <Card titulo="Ingresos" valor={ingresosGeneralesAnim} color={COLOR_GREEN} icon={<TrendingUpIcon />} />
+          <Card titulo="Egresos" valor={egresosGeneralesAnim} color={COLOR_RED} icon={<TrendingDownIcon />} />
           <Card
             titulo="Resultado"
             valor={resultadoGeneral}
-            color={resultadoGeneral < 0 ? "#EF4444" : "#148D8D"}
+            color={resultadoGeneral < 0 ? COLOR_RED : "#148D8D"}
+            icon={<AccountBalanceWalletIcon />}
           />
           <Card
             titulo="Egreso / Ingreso"
             valor={proporcionGeneral + "%"}
             color="#0B4F6C"
+            icon={<PercentIcon />}
           />
-          
-        </div><div style={styles.graficos}>
+        </div>
+
+        <div style={styles.graficos}>
           <div style={styles.cardGrafico}>
-            <div id="graficoBarrasGeneral" style={styles.chartInner} />
+            <div style={styles.chartTitulo}>Ingresos, egresos y resultado</div>
+            <div style={styles.chartInner}>
+              <BarraConceptos data={datosBarraGeneral} />
+            </div>
           </div>
 
           <div style={styles.cardGrafico}>
-            <div id="graficoLineaGeneral" style={styles.chartInner} />
+            <div style={styles.chartTitulo}>Evolución de saldo</div>
+            <div style={styles.chartInner}>
+              <EvolucionSaldo data={datosGeneral} />
+            </div>
           </div>
         </div>
       </SectionCard>
 
-      
-
-      <SectionCard
-        title="Analisis Financiero MENSUAL"
-        
-      >
+      <SectionCard title="Análisis Mensual" icon={<CalendarMonthIcon />}>
         <div style={styles.filtroWrap}>
           <div style={styles.filtroGrupo}>
             <label style={styles.label}>Seleccionar período</label>
@@ -799,24 +695,36 @@ series: {
         </div>
 
         <div style={styles.kpis}>
-          <Card titulo="Ingresos" valor={ingresosMesAnim} color="#22C55E" />
-          <Card titulo="Egresos" valor={egresosMesAnim} color="#EF4444" />
+          <Card titulo="Ingresos" valor={ingresosMesAnim} color={COLOR_GREEN} icon={<TrendingUpIcon />} />
+          <Card titulo="Egresos" valor={egresosMesAnim} color={COLOR_RED} icon={<TrendingDownIcon />} />
           <Card
             titulo="Resultado"
             valor={resultadoMes}
-            color={resultadoMes < 0 ? "#EF4444" : "#148D8D"}
+            color={resultadoMes < 0 ? COLOR_RED : "#148D8D"}
+            icon={<AccountBalanceWalletIcon />}
           />
-          <Card titulo="Egreso / Ingreso" valor={proporcionMes + "%"} color="#0B4F6C" />
+          <Card
+            titulo="Egreso / Ingreso"
+            valor={proporcionMes + "%"}
+            color="#0B4F6C"
+            icon={<PercentIcon />}
+          />
         </div>
 
         {periodoSeleccionado ? (
           <div style={styles.graficos}>
             <div style={styles.cardGrafico}>
-              <div id="graficoBarrasMes" style={styles.chartInner} />
+              <div style={styles.chartTitulo}>Ingresos, egresos y resultado</div>
+              <div style={styles.chartInner}>
+                <BarraConceptos data={datosBarraMes} />
+              </div>
             </div>
 
             <div style={styles.cardGrafico}>
-              <div id="graficoLineaMes" style={styles.chartInner} />
+              <div style={styles.chartTitulo}>Evolución de saldo</div>
+              <div style={styles.chartInner}>
+                <EvolucionSaldo data={datosMes} />
+              </div>
             </div>
           </div>
         ) : (
@@ -829,29 +737,91 @@ series: {
   );
 }
 
-function SectionCard({ title, subtitle, children }) {
+function SectionCard({ title, subtitle, icon, children }) {
   return (
     <div style={styles.seccion}>
       <div style={styles.seccionHeader}>
-        <h3 style={styles.subtitulo}>{title}</h3>
-        <div style={styles.subtituloSecundario}>{subtitle}</div>
+        {icon && (
+          <div style={{ ...styles.seccionIcon, background: `${COLOR_TEAL}1a`, color: COLOR_TEAL }}>
+            {icon}
+          </div>
+        )}
+        <div>
+          <h3 style={styles.subtitulo}>{title}</h3>
+          {subtitle && <div style={styles.subtituloSecundario}>{subtitle}</div>}
+        </div>
       </div>
       <div style={styles.seccionBody}>{children}</div>
     </div>
   );
 }
 
-function Card({ titulo, valor, color }) {
+function Card({ titulo, valor, color, icon }) {
   return (
     <div style={styles.kpiCard}>
-      <div style={{ ...styles.kpiAccent, background: color }} />
-      <div style={styles.kpiLabel}>{titulo}</div>
+      {icon && (
+        <div style={{ ...styles.kpiIcon, background: `${color}1a`, color }}>
+          {icon}
+        </div>
+      )}
+      <div style={{ minWidth: 0 }}>
+        <div style={styles.kpiLabel}>{titulo}</div>
 
-      <div style={styles.kpiValue}>
-        {typeof valor === "number"
-          ? "$" + Math.round(valor).toLocaleString("es-AR")
-          : valor}
+        <div style={styles.kpiValue}>
+          {typeof valor === "number"
+            ? "$" + Math.round(valor).toLocaleString("es-AR")
+            : valor}
+        </div>
       </div>
     </div>
+  );
+}
+
+function BarraConceptos({ data }) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef2f5" />
+        <XAxis dataKey="concepto" tick={{ fontSize: 12, fontFamily: FONT_FORMAL }} />
+        <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 11, fontFamily: FONT_FORMAL }} width={55} />
+        <Tooltip formatter={(value) => formatoNumero(value)} />
+        <Bar dataKey="monto" radius={[6, 6, 0, 0]}>
+          {data.map((entry) => (
+            <Cell key={entry.concepto} fill={entry.fill} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function EvolucionSaldo({ data }) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <ComposedChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
+        <defs>
+          <linearGradient id="gradSaldoResumen1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#0B4F6C" stopOpacity={0.25} />
+            <stop offset="100%" stopColor="#0B4F6C" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef2f5" />
+        <XAxis dataKey="label" tick={{ fontSize: 11, fontFamily: FONT_FORMAL }} />
+        <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 11, fontFamily: FONT_FORMAL }} width={55} />
+        <Tooltip formatter={(value) => formatoNumero(value)} />
+        <Legend wrapperStyle={{ fontSize: 12, fontFamily: FONT_FORMAL }} />
+        <Area
+          type="monotone"
+          dataKey="saldo"
+          name="Saldo"
+          stroke="#0B4F6C"
+          strokeWidth={3}
+          fill="url(#gradSaldoResumen1)"
+          dot={{ r: 2.5, fill: "#0B4F6C" }}
+        />
+        <Line type="monotone" dataKey="ingresos" name="Ingresos" stroke={COLOR_GREEN} strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="egresos" name="Egresos" stroke={COLOR_RED} strokeWidth={2} dot={false} />
+      </ComposedChart>
+    </ResponsiveContainer>
   );
 }

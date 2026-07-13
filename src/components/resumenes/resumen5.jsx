@@ -1,6 +1,37 @@
 import React, { useEffect, useState } from "react";
 import servicionivel3 from "../../services/nivel3";
 
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import TrendingDownIcon from "@mui/icons-material/TrendingDown";
+import PercentIcon from "@mui/icons-material/Percent";
+import ShowChartIcon from "@mui/icons-material/ShowChart";
+
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  BarChart,
+  Bar,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Cell,
+} from "recharts";
+
+const COLOR_NAVY = "#083b5c";
+const COLOR_TEAL = "#148D8D";
+const COLOR_GREEN = "#15803d";
+const COLOR_RED = "#b3564f";
+const FONT_FORMAL = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+
+const formatoNumero = (valor) => "$" + Math.round(Number(valor) || 0).toLocaleString("es-AR");
+
+const formatoCompacto = (valor) =>
+  new Intl.NumberFormat("es-AR", { notation: "compact", maximumFractionDigits: 1 }).format(
+    Number(valor) || 0
+  );
+
 export default function DashboardPro() {
 
   const [data, setData] = useState({
@@ -97,86 +128,130 @@ export default function DashboardPro() {
 
   /* ---------------- UI ---------------- */
 
+  const ingresosTop = data.ingresos.slice(0, 8);
+  const egresosTop = data.egresos.slice(0, 8);
+  const proporcionPct = Number.isFinite(data.proporcion) ? data.proporcion * 100 : 0;
+
   return (
     <div style={styles.container}>
-
-      <h2 style={styles.title}>Dashboard Financiero</h2>
+     
 
       {/* RESUMEN */}
-      <div style={styles.resumen}>
+      <div style={styles.kpis}>
+        <Card
+          title="Ingresos"
+          color={COLOR_GREEN}
+          icon={<TrendingUpIcon />}
+          value={formatoNumero(data.totalIngresos)}
+        />
 
-        <Card title="Ingresos">
-          ${data.totalIngresos.toLocaleString()}
-        </Card>
+        <Card
+          title="Egresos"
+          color={COLOR_RED}
+          icon={<TrendingDownIcon />}
+          value={formatoNumero(data.totalEgresos)}
+        />
 
-        <Card title="Egresos">
-          ${data.totalEgresos.toLocaleString()}
-        </Card>
-
-        <Card title="Proporción">
-          {data.proporcion.toFixed(2)}
-        </Card>
-
-      </div>
-
-      {/* TABLAS */}
-      <div style={styles.grid}>
-
-        <Tabla titulo="Ingresos" data={data.ingresos} />
-
-        <Tabla titulo="Egresos" data={data.egresos} />
-
+        <Card
+          title="Egreso / Ingreso"
+          color={COLOR_NAVY}
+          icon={<PercentIcon />}
+          value={`${proporcionPct.toFixed(1)}%`}
+        />
       </div>
 
       {/* SALDO MENSUAL */}
-      <div style={styles.card}>
-        <h3>Saldo mensual acumulado</h3>
+      <SectionCard title="Saldo mensual acumulado" subtitle="Balance acumulado mes a mes">
+        <div style={{ height: 260 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={data.saldoMensual} margin={{ top: 10, right: 16, left: 0, bottom: 5 }}>
+              <defs>
+                <linearGradient id="gradSaldoResumen5" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={COLOR_TEAL} stopOpacity={0.28} />
+                  <stop offset="100%" stopColor={COLOR_TEAL} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef2f5" />
+              <XAxis dataKey="mes" tick={{ fontSize: 12, fontFamily: FONT_FORMAL }} />
+              <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 11, fontFamily: FONT_FORMAL }} width={55} />
+              <Tooltip formatter={(value) => formatoNumero(value)} />
+              <Area
+                type="monotone"
+                dataKey="saldo"
+                name="Saldo"
+                stroke={COLOR_TEAL}
+                strokeWidth={2.5}
+                fill="url(#gradSaldoResumen5)"
+                dot={{ r: 3, fill: COLOR_TEAL }}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      </SectionCard>
 
-        {data.saldoMensual.map((m, i) => (
-          <div key={i} style={styles.row}>
-            <span>{m.mes}</span>
-            <strong>${m.saldo.toLocaleString()}</strong>
-          </div>
-        ))}
+      {/* TABLAS */}
+      <div style={styles.grid}>
+        <SectionCard title="Ingresos por concepto" subtitle="Top conceptos con mayor ingreso">
+          <RankingChart data={ingresosTop} color={COLOR_GREEN} />
+        </SectionCard>
+
+        <SectionCard title="Egresos por concepto" subtitle="Top conceptos con mayor egreso">
+          <RankingChart data={egresosTop} color={COLOR_RED} />
+        </SectionCard>
       </div>
-
     </div>
   );
 }
 
 /* ---------------- COMPONENTES ---------------- */
 
-function Tabla({ titulo, data }) {
+function RankingChart({ data, color }) {
+  if (!data.length) {
+    return <div style={styles.sinDatos}>Sin datos para mostrar</div>;
+  }
+
   return (
-    <div style={styles.card}>
-      <h3>{titulo}</h3>
-
-      <table style={styles.table}>
-        <thead>
-          <tr>
-            <th>Concepto</th>
-            <th>Monto</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {data.map((item, i) => (
-            <tr key={i}>
-              <td>{item.concepto}</td>
-              <td>${item.monto.toLocaleString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div style={{ height: Math.max(200, data.length * 32) }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#eef2f5" />
+          <XAxis type="number" tickFormatter={formatoCompacto} tick={{ fontSize: 11, fontFamily: FONT_FORMAL }} />
+          <YAxis
+            type="category"
+            dataKey="concepto"
+            width={150}
+            tick={{ fontSize: 11.5, fontFamily: FONT_FORMAL }}
+          />
+          <Tooltip formatter={(value) => formatoNumero(value)} />
+          <Bar dataKey="monto" radius={[0, 6, 6, 0]}>
+            {data.map((entry) => (
+              <Cell key={entry.concepto} fill={color} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 }
 
-function Card({ title, children }) {
+function SectionCard({ title, subtitle, children }) {
+  return (
+    <div style={styles.card}>
+      <h3 style={styles.cardTitle}>{title}</h3>
+      {subtitle && <div style={styles.cardSubtitle}>{subtitle}</div>}
+      <div style={{ marginTop: 12 }}>{children}</div>
+    </div>
+  );
+}
+
+function Card({ title, value, color, icon }) {
   return (
     <div style={styles.cardMini}>
-      <span>{title}</span>
-      <h2>{children}</h2>
+      <div style={{ ...styles.cardMiniIcon, background: `${color}1a`, color }}>{icon}</div>
+      <div style={{ minWidth: 0 }}>
+        <div style={styles.cardMiniLabel}>{title}</div>
+        <div style={styles.cardMiniValue}>{value}</div>
+      </div>
     </div>
   );
 }
@@ -186,56 +261,123 @@ function Card({ title, children }) {
 const styles = {
 
   container: {
-    padding: 30,
-    background: "#f5f7fa",
+    padding: 24,
+    background: "#f4f7f9",
     minHeight: "100vh",
-    fontFamily: "Segoe UI"
+    fontFamily: FONT_FORMAL,
+    boxSizing: "border-box",
+  },
+
+  header: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 20,
+  },
+
+  headerIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
   },
 
   title: {
-    textAlign: "center",
-    marginBottom: 30
+    margin: 0,
+    fontSize: 19,
+    fontWeight: 700,
+    color: COLOR_NAVY,
   },
 
-  resumen: {
-    display: "flex",
-    gap: 20,
-    marginBottom: 30,
-    justifyContent: "center"
+  subtitle: {
+    marginTop: 2,
+    fontSize: 12.5,
+    color: "#64748B",
+    fontWeight: 500,
+  },
+
+  kpis: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+    gap: 16,
+    marginBottom: 20,
   },
 
   grid: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
+    gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
     gap: 20
   },
 
   card: {
     background: "#fff",
     padding: 20,
-    borderRadius: 10,
-    boxShadow: "0 5px 15px rgba(0,0,0,0.05)"
+    borderRadius: 16,
+    marginBottom: 20,
+    border: "1px solid rgba(8,59,92,0.06)",
+    boxShadow: "0 6px 18px rgba(8,59,92,0.07)",
+  },
+
+  cardTitle: {
+    margin: 0,
+    fontSize: 15,
+    fontWeight: 700,
+    color: COLOR_NAVY,
+  },
+
+  cardSubtitle: {
+    marginTop: 2,
+    fontSize: 12,
+    color: "#64748B",
+    fontWeight: 500,
   },
 
   cardMini: {
     background: "#fff",
-    padding: 15,
-    borderRadius: 10,
-    minWidth: 150,
-    textAlign: "center",
-    boxShadow: "0 5px 15px rgba(0,0,0,0.05)"
-  },
-
-  table: {
-    width: "100%",
-    borderCollapse: "collapse"
-  },
-
-  row: {
+    padding: 16,
+    borderRadius: 14,
     display: "flex",
-    justifyContent: "space-between",
-    padding: "5px 0",
-    borderBottom: "1px solid #eee"
-  }
+    alignItems: "center",
+    gap: 12,
+    border: "1px solid rgba(8,59,92,0.06)",
+    boxShadow: "0 6px 18px rgba(8,59,92,0.07)",
+    minWidth: 0,
+  },
+
+  cardMiniIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+
+  cardMiniLabel: {
+    fontSize: 11.5,
+    fontWeight: 700,
+    color: "#64748B",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+
+  cardMiniValue: {
+    fontSize: 19,
+    fontWeight: 700,
+    color: COLOR_NAVY,
+    marginTop: 2,
+  },
+
+  sinDatos: {
+    textAlign: "center",
+    padding: "34px 12px",
+    color: "#64748B",
+    fontSize: 13,
+    fontWeight: 500,
+  },
 
 };
