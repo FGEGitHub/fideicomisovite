@@ -7,6 +7,11 @@
   overflow-y: visible;
 }
 
+/* Modo oscuro, usado solo por la sección nivel6 (ver menuizq6.jsx) */
+.mi-shell--dark {
+  background: #0a1e2c;
+}
+
 /* ---------- SIDEBAR ---------- */
 /* position: fixed a propósito: el sidebar siempre ocupa el alto real de
    pantalla sin importar cuánto scroll tenga el contenido principal. */
@@ -227,7 +232,8 @@
   color: rgba(234, 243, 247, 0.5);
 }
 
-.mi-logout-btn {
+.mi-logout-btn,
+.mi-modo-toggle-btn {
   width: 100%;
   display: flex;
   align-items: center;
@@ -244,10 +250,20 @@
   transition: all 0.15s ease;
 }
 
+.mi-modo-toggle-btn {
+  margin-bottom: 8px;
+}
+
 .mi-logout-btn:hover {
   background: rgba(220, 38, 38, 0.18);
   border-color: rgba(220, 38, 38, 0.4);
   color: #fecaca;
+}
+
+.mi-modo-toggle-btn:hover {
+  background: rgba(42, 170, 209, 0.18);
+  border-color: rgba(42, 170, 209, 0.4);
+  color: #bfe9f7;
 }
 
 /* ---------- RESIZER ---------- */

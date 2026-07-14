@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import servicionivel3 from "../../services/nivel3";
 import SubirExcelMovimientos from "./subierexce";
 import Tabla from "./tablamovimientos";
 import MovimientosDashboard from "./MovimientosDashboard";
+import { FILTROS_INICIALES, deduplicarMovimientos, filtrarMovimientos, hayFiltrosActivos } from "./movimientosUtils";
 
 import {
   Box,
@@ -12,17 +13,18 @@ import {
   MenuItem,
   Card,
   CardContent,
-  Collapse,
   Modal,
 } from "@mui/material";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
+import { useTemaColores } from "../../context/ModoOscuroContext";
 
-const COLOR_NAVY = "#083b5c";
-const COLOR_TEAL = "#148D8D";
+const COLOR_AQUA = "#14b8a6";
 
 export default function FormMovimiento() {
+  const { COLOR_NAVY, COLOR_TEAL, BG_CARD } = useTemaColores();
+
   const [mostrarForm, setMostrarForm] = useState(false);
   const [openExcel, setOpenExcel] = useState(false);
 
@@ -31,7 +33,15 @@ export default function FormMovimiento() {
   const [monto, setMonto] = useState("");
   const [medio, setMedio] = useState("");
   const [detalle, setDetalle] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loadingForm, setLoadingForm] = useState(false);
+
+  // Fuente única de datos: la tabla y las tarjetas de KPIs comparten el mismo
+  // listado y el mismo estado de filtros, así lo que se filtra en la tabla
+  // se refleja automáticamente en Ingresos / Egresos / Saldo / Registros.
+  const [movimientos, setMovimientos] = useState([]);
+  const [loadingDatos, setLoadingDatos] = useState(true);
+  const [errorDatos, setErrorDatos] = useState(null);
+  const [filtros, setFiltros] = useState(FILTROS_INICIALES);
 
   const mediosPago = [
     "Efectivo",
@@ -41,6 +51,41 @@ export default function FormMovimiento() {
     "Cheque",
   ];
 
+  const cargarMovimientos = useCallback(async () => {
+    try {
+      setLoadingDatos(true);
+      setErrorDatos(null);
+      const data = await servicionivel3.traermovimientos();
+      setMovimientos(deduplicarMovimientos(Array.isArray(data) ? data : []));
+    } catch (err) {
+      console.error("Error al traer movimientos:", err);
+      setErrorDatos("No se pudo cargar la información de movimientos.");
+    } finally {
+      setLoadingDatos(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    cargarMovimientos();
+  }, [cargarMovimientos]);
+
+  const movimientosFiltrados = useMemo(
+    () => filtrarMovimientos(movimientos, filtros),
+    [movimientos, filtros]
+  );
+
+  const handleFiltroChange = (campo, valor) => {
+    setFiltros((prev) => ({ ...prev, [campo]: valor }));
+  };
+
+  const handleLimpiarFiltros = () => setFiltros(FILTROS_INICIALES);
+
+  const handleConceptoActualizado = (id, nuevoConcepto) => {
+    setMovimientos((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, concepto: nuevoConcepto } : m))
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -49,7 +94,7 @@ export default function FormMovimiento() {
       return;
     }
 
-    setLoading(true);
+    setLoadingForm(true);
 
     const data = {
       tipo_operacion: tipo,
@@ -69,12 +114,13 @@ export default function FormMovimiento() {
       setMedio("");
       setDetalle("");
       setMostrarForm(false);
+      cargarMovimientos();
     } catch (err) {
       console.error(err);
       alert("Error al registrar el movimiento");
     }
 
-    setLoading(false);
+    setLoadingForm(false);
   };
 
   return (
@@ -107,10 +153,10 @@ export default function FormMovimiento() {
             <AccountBalanceWalletIcon />
           </Box>
           <Box sx={{ minWidth: 0 }}>
-            <Typography fontWeight={800} fontSize={21} color={COLOR_NAVY} noWrap>
+            <Typography fontWeight={800} fontSize={21} sx={{ color: COLOR_NAVY }} noWrap>
               Movimientos
             </Typography>
-            <Typography color="text.secondary" fontSize={13}>
+            <Typography sx={{ color: "text.secondary" }} fontSize={13}>
               Gestión y control general
             </Typography>
           </Box>
@@ -128,8 +174,9 @@ export default function FormMovimiento() {
               px: 1.75,
               height: 40,
               color: COLOR_NAVY,
-              border: "1px solid rgba(8,59,92,0.14)",
-              "&:hover": { background: "rgba(8,59,92,0.06)" },
+              background: `${COLOR_NAVY}14`,
+              border: `1px solid ${COLOR_NAVY}3d`,
+              "&:hover": { background: `${COLOR_NAVY}22`, border: `1px solid ${COLOR_NAVY}66` },
             }}
           >
             Cargar Excel
@@ -137,18 +184,18 @@ export default function FormMovimiento() {
 
           <Button
             onClick={() => setMostrarForm(true)}
-            variant="contained"
             startIcon={<AddCircleIcon />}
             sx={{
               borderRadius: 2.5,
               textTransform: "none",
               fontWeight: 700,
               fontSize: 13,
-              px: 2,
+              px: 1.75,
               height: 40,
-              background: COLOR_TEAL,
-              boxShadow: "0 8px 18px rgba(20,141,141,0.28)",
-              "&:hover": { background: "#117C85", boxShadow: "0 8px 18px rgba(20,141,141,0.34)" },
+              color: COLOR_AQUA,
+              background: `${COLOR_AQUA}14`,
+              border: `1px solid ${COLOR_AQUA}3d`,
+              "&:hover": { background: `${COLOR_AQUA}22`, border: `1px solid ${COLOR_AQUA}66` },
             }}
           >
             Registrar movimiento
@@ -218,10 +265,10 @@ export default function FormMovimiento() {
       <Box
         sx={{
           p: 3,
-          background: "#fff",
+          background: BG_CARD,
         }}
       >
-        <SubirExcelMovimientos />
+        <SubirExcelMovimientos onSuccess={cargarMovimientos} />
       </Box>
     </Card>
   </Box>
@@ -347,7 +394,7 @@ export default function FormMovimiento() {
 
        <Button
   type="submit"
-  disabled={loading}
+  disabled={loadingForm}
   variant="contained"
   sx={{
      mt: 1,
@@ -374,7 +421,7 @@ export default function FormMovimiento() {
     },
   }}
 >
-  {loading ? "Guardando..." : "Guardar movimiento"}
+  {loadingForm ? "Guardando..." : "Guardar movimiento"}
 </Button>
         </Box>
       </CardContent>
@@ -382,22 +429,31 @@ export default function FormMovimiento() {
   </Box>
 </Modal>
 
-      {/* ANÁLISIS DE MOVIMIENTOS — panel propio con scroll acotado, no afecta el layout de la tabla */}
+      {/* ANÁLISIS DE MOVIMIENTOS (KPIs) — altura propia según contenido, sin robarle espacio a la tabla */}
       <Box
         sx={{
-          maxHeight: { xs: "60vh", md: "52vh" },
-          overflowY: "auto",
-          overflowX: "hidden",
           mb: 2,
-          pr: 0.5,
           flexShrink: 0,
         }}
       >
-        <MovimientosDashboard />
+        <MovimientosDashboard
+          movimientos={movimientosFiltrados}
+          totalRegistros={movimientos.length}
+          filtrosActivos={hayFiltrosActivos(filtros)}
+          loading={loadingDatos}
+          error={errorDatos}
+          onReintentar={cargarMovimientos}
+        />
       </Box>
 
       {/* TABLA */}
-      <Tabla />
+      <Tabla
+        movimientos={movimientos}
+        filtros={filtros}
+        onFiltroChange={handleFiltroChange}
+        onLimpiarFiltros={handleLimpiarFiltros}
+        onConceptoActualizado={handleConceptoActualizado}
+      />
     </>
   );
 }

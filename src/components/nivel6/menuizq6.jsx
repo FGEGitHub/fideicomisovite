@@ -1,6 +1,8 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
 import logo from '../../Assets/marcas.png';
+import ModoOscuroContext, { PALETA_CLARA, PALETA_OSCURA } from "../../context/ModoOscuroContext";
 
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import SummarizeIcon from '@mui/icons-material/Summarize';
@@ -11,8 +13,12 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
 
 import '../movimientos2/menuizq7.css';
+
+const MODO_OSCURO_STORAGE_KEY = "nivel6_modo_oscuro";
 
 const initialWidth = 260; // Ancho inicial del menú
 
@@ -28,8 +34,8 @@ const menuItems = [
     text: 'General/Mensual',
     icon: <SummarizeIcon fontSize="small" />,
     path: '/nivel6/resumen1',
-    accent: '#083b5c',
-    accentSoft: 'rgba(8, 59, 92, 0.18)',
+    accent: '#4fc3f7',
+    accentSoft: 'rgba(79, 195, 247, 0.18)',
   },
   {
     text: 'Egresos',
@@ -62,6 +68,44 @@ export default function MenuIzq2({ children }) {
   const [drawerWidth, setDrawerWidth] = useState(initialWidth);
   const [resizing, setResizing] = useState(false);
   const [menuVisible, setMenuVisible] = useState(true);
+
+  // Modo oscuro/claro de la sección nivel6. Por defecto arranca en claro;
+  // se recuerda en localStorage para que no se resetee al navegar entre páginas
+  // (cada página monta su propio MenuIzq2, así que el estado no persiste solo).
+  const [oscuro, setOscuro] = useState(
+    () => window.localStorage.getItem(MODO_OSCURO_STORAGE_KEY) === "true"
+  );
+
+  useEffect(() => {
+    window.localStorage.setItem(MODO_OSCURO_STORAGE_KEY, String(oscuro));
+  }, [oscuro]);
+
+  const toggleOscuro = () => setOscuro((prev) => !prev);
+
+  const colores = oscuro ? PALETA_OSCURA : PALETA_CLARA;
+
+  // Tema MUI (respeta el tono azul marino del sidebar) para todos los componentes
+  // MUI que se rendericen dentro de la sección nivel6 (Select, Dialog, Modal, Chip,
+  // Button, etc.), ya que por defecto usan el theme claro de MUI.
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode: oscuro ? "dark" : "light",
+          background: {
+            default: colores.BG_PAGE,
+            paper: colores.BG_CARD,
+          },
+          primary: {
+            main: colores.COLOR_TEAL,
+          },
+          text: oscuro
+            ? { primary: "#eaf3f7", secondary: "rgba(234,243,247,0.62)" }
+            : { primary: colores.COLOR_NAVY, secondary: colores.TEXT_MUTED },
+        },
+      }),
+    [oscuro, colores]
+  );
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedNoteAppUser')
@@ -114,7 +158,7 @@ export default function MenuIzq2({ children }) {
     .toUpperCase();
 
   return (
-    <div className="mi-shell">
+    <div className={`mi-shell${oscuro ? " mi-shell--dark" : ""}`}>
       {menuVisible && (
         <aside
           className={`mi-sidebar${resizing ? " is-resizing" : ""}`}
@@ -157,6 +201,11 @@ export default function MenuIzq2({ children }) {
                 <p className="mi-user-role">Nivel {user?.nivel ?? "-"}</p>
               </div>
             </div>
+            <button className="mi-modo-toggle-btn" onClick={toggleOscuro}>
+              {oscuro ? <LightModeIcon sx={{ fontSize: 16 }} /> : <DarkModeIcon sx={{ fontSize: 16 }} />}
+              {oscuro ? "Modo claro" : "Modo oscuro"}
+            </button>
+
             <button className="mi-logout-btn" onClick={hanleLogout}>
               <LogoutIcon sx={{ fontSize: 16 }} />
               Cerrar sesión
@@ -178,7 +227,11 @@ export default function MenuIzq2({ children }) {
           </button>
         )}
 
-        {children}
+        <ThemeProvider theme={theme}>
+          <ModoOscuroContext.Provider value={{ oscuro, toggleOscuro, colores }}>
+            {children}
+          </ModoOscuroContext.Provider>
+        </ThemeProvider>
       </main>
     </div>
   );

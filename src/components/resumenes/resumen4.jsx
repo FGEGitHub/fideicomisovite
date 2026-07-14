@@ -1,15 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
 import servicionivel3 from "../../services/nivel3";
+import { useTemaColores } from "../../context/ModoOscuroContext";
 
 export default function DashboardFinanciero() {
+
+const colores = useTemaColores();
+const styles = crearEstilos(colores);
 
 const barRef = useRef(null);
 const ingresosRef = useRef(null);
 const gastosRef = useRef(null);
 
 const COLORS = [
-"#3B82F6","#6366F1","#8B5CF6","#EC4899",
-"#F59E0B","#10B981","#EF4444"
+"#4fc3f7","#818cf8","#a78bfa","#f472b6",
+"#f59e0b","#22c55e","#ef4444"
 ];
 
 const [kpis,setKpis] = useState({
@@ -44,7 +48,7 @@ useEffect(()=>{
   const filtrados = filtrarMovimientos();
   procesarDatos(filtrados);
 
-},[movimientos,filtro]);
+},[movimientos,filtro,colores]);
 
 /* ================= DATOS ================= */
 
@@ -146,7 +150,7 @@ if(!canvas) return;
 const ctx = canvas.getContext("2d");
 ctx.clearRect(0,0,400,260);
 
-ctx.strokeStyle="#E5E7EB";
+ctx.strokeStyle=colores.GRID_STROKE;
 
 for(let i=0;i<5;i++){
   let y = 220 - i*40;
@@ -157,9 +161,9 @@ for(let i=0;i<5;i++){
 }
 
 const data = [
-  {label:"Ingresos", value:ingresos, color:"#22C55E"},
-  {label:"Egresos", value:gastos, color:"#EF4444"},
-  {label:"Resultado", value:resultado, color:"#3B82F6"}
+  {label:"Ingresos", value:ingresos, color:"#22c55e"},
+  {label:"Egresos", value:gastos, color:"#ef4444"},
+  {label:"Resultado", value:resultado, color:"#4fc3f7"}
 ];
 
 const max = Math.max(...data.map(d=>d.value),1);
@@ -173,7 +177,7 @@ data.forEach((d,i)=>{
   ctx.fillStyle=d.color;
   ctx.fillRect(x,y,50,h);
 
-  ctx.fillStyle="#111";
+  ctx.fillStyle=colores.TOOLTIP_TEXT;
   ctx.font="bold 12px Arial";
   ctx.textAlign="center";
   ctx.fillText("$"+Math.round(d.value).toLocaleString(),x+25,y-5);
@@ -213,10 +217,10 @@ data.forEach((item,i)=>{
 
 ctx.beginPath();
 ctx.arc(150,150,70,0,Math.PI*2);
-ctx.fillStyle="#fff";
+ctx.fillStyle=colores.BG_CARD;
 ctx.fill();
 
-ctx.fillStyle="#111";
+ctx.fillStyle=colores.TOOLTIP_TEXT;
 ctx.font="bold 16px Arial";
 ctx.textAlign="center";
 ctx.fillText("$"+Math.round(total).toLocaleString(),150,155);
@@ -234,6 +238,7 @@ return(
 <div style={styles.filtros}>
 
 <select
+  style={styles.filtroInput}
   value={filtro.tipo}
   onChange={e=>setFiltro({...filtro,tipo:e.target.value})}
 >
@@ -245,23 +250,23 @@ return(
 
 {filtro.tipo === "mes" && (
 <>
-<input type="number" value={filtro.mes}
+<input style={styles.filtroInput} type="number" value={filtro.mes}
 onChange={e=>setFiltro({...filtro,mes:e.target.value})}/>
-<input type="number" value={filtro.anio}
+<input style={styles.filtroInput} type="number" value={filtro.anio}
 onChange={e=>setFiltro({...filtro,anio:e.target.value})}/>
 </>
 )}
 
 {filtro.tipo === "anio" && (
-<input type="number" value={filtro.anio}
+<input style={styles.filtroInput} type="number" value={filtro.anio}
 onChange={e=>setFiltro({...filtro,anio:e.target.value})}/>
 )}
 
 {filtro.tipo === "rango" && (
 <>
-<input type="date" value={filtro.desde}
+<input style={styles.filtroInput} type="date" value={filtro.desde}
 onChange={e=>setFiltro({...filtro,desde:e.target.value})}/>
-<input type="date" value={filtro.hasta}
+<input style={styles.filtroInput} type="date" value={filtro.hasta}
 onChange={e=>setFiltro({...filtro,hasta:e.target.value})}/>
 </>
 )}
@@ -270,10 +275,10 @@ onChange={e=>setFiltro({...filtro,hasta:e.target.value})}/>
 
 {/* KPIs */}
 <div style={styles.kpis}>
-<Kpi titulo="Ingresos" valor={kpis.ingresos} color="#22C55E"/>
-<Kpi titulo="Egresos" valor={kpis.gastos} color="#EF4444"/>
-<Kpi titulo="Resultado" valor={kpis.resultado} color="#3B82F6"/>
-<Kpi titulo="Rentabilidad" valor={kpis.rentabilidad+"%"} color="#8B5CF6"/>
+<Kpi titulo="Ingresos" valor={kpis.ingresos} color="#22c55e"/>
+<Kpi titulo="Egresos" valor={kpis.gastos} color="#ef4444"/>
+<Kpi titulo="Resultado" valor={kpis.resultado} color="#4fc3f7"/>
+<Kpi titulo="Rentabilidad" valor={kpis.rentabilidad+"%"} color="#a78bfa"/>
 </div>
 
 <div style={styles.grid}>
@@ -302,6 +307,7 @@ onChange={e=>setFiltro({...filtro,hasta:e.target.value})}/>
 }
 function Leyenda({data, colors}){
 
+const styles = crearEstilos(useTemaColores());
 const total = data.reduce((a,b)=>a+b.valor,0);
 
 return(
@@ -341,6 +347,7 @@ return(
 /* KPI */
 function Kpi({titulo,valor,color}){
 
+const styles = crearEstilos(useTemaColores());
 const [num,setNum]=useState(0);
 
 useEffect(()=>{
@@ -367,12 +374,12 @@ return(
 }
 
 /* ESTILOS */
-const styles = {
+const crearEstilos = (c) => ({
 
 container:{
   padding:30,
   fontFamily:"Inter, Arial",
-  background:"linear-gradient(135deg,#eef2ff,#f9fafb)",
+  background:c.BG_PAGE,
   minHeight:"100vh"
 },
 
@@ -380,19 +387,31 @@ title:{
   marginBottom:25,
   fontSize:24,
   fontWeight:700,
-  color:"#111827"
+  color:c.TEXT_FUERTE
 },
 
 filtros:{
   display:"flex",
   gap:10,
   marginBottom:25,
-  background:"#fff",
+  background:c.BG_CARD,
   padding:12,
   borderRadius:12,
-  boxShadow:"0 4px 12px rgba(0,0,0,0.05)",
+  boxShadow:c.SHADOW_CARD,
+  border:`1px solid ${c.BORDER}`,
   alignItems:"center",
   flexWrap:"wrap"
+},
+
+filtroInput:{
+  padding:"7px 10px",
+  borderRadius:8,
+  border:`1px solid ${c.BORDER_INPUT}`,
+  background:c.BG_INPUT,
+  color:c.TEXT_FUERTE,
+  colorScheme:c.MODO,
+  fontSize:13,
+  outline:"none",
 },
 
 kpis:{
@@ -403,11 +422,13 @@ kpis:{
 },
 
 kpi:{
-  background:"#fff",
+  background:c.BG_CARD,
   padding:18,
   borderRadius:14,
   width:200,
-  boxShadow:"0 10px 25px rgba(0,0,0,0.08)",
+  color:c.TEXT_FUERTE,
+  border:`1px solid ${c.BORDER}`,
+  boxShadow:c.SHADOW_CARD,
   transition:"all .2s ease"
 },
 
@@ -418,10 +439,12 @@ grid:{
 },
 
 card:{
-  background:"#fff",
+  background:c.BG_CARD,
   padding:25,
   borderRadius:16,
-  boxShadow:"0 15px 35px rgba(0,0,0,0.08)",
+  color:c.TEXT_FUERTE,
+  border:`1px solid ${c.BORDER}`,
+  boxShadow:c.SHADOW_CARD,
   transition:"all .25s ease",
   position:"relative"
 },
@@ -429,7 +452,7 @@ card:{
 cardTitle:{
   fontSize:14,
   fontWeight:600,
-  color:"#374151",
+  color:c.TEXT_FUERTE,
   marginBottom:10
 },
 leyenda:{
@@ -457,13 +480,13 @@ colorBox:{
 
 nombre:{
   fontWeight:"600",
-  color:"#111827"
+  color:c.TEXT_FUERTE
 },
 
 valor:{
-  color:"#6B7280",
+  color:c.TEXT_MUTED,
   fontSize:12
 }
 
 
-};
+});

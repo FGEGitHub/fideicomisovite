@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import servicionivel3 from "../../services/nivel3";
+import { useTemaColores } from "../../context/ModoOscuroContext";
 
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
@@ -24,14 +25,9 @@ import {
   Pie,
 } from "recharts";
 
-const COLOR_NAVY = "#083b5c";
-const COLOR_TEAL = "#148D8D";
-const COLOR_GREEN = "#15803d";
-const COLOR_RED = "#b3564f";
-const COLOR_AMBER = "#c98a3e";
 const FONT_FORMAL = "'Helvetica Neue', Helvetica, Arial, sans-serif";
 
-const PALETTE = [COLOR_NAVY, COLOR_TEAL, "#2aaad1", COLOR_AMBER, "#7c6bb0", "#5b8fa3", COLOR_GREEN, "#946b53"];
+const crearPalette = (c) => [c.COLOR_NAVY, c.COLOR_TEAL, "#2aaad1", c.COLOR_AMBER, "#9b8bd4", "#7db8cf", c.COLOR_GREEN, "#c08a6e"];
 
 const formatoNumero = (valor) => "$" + Math.round(Number(valor) || 0).toLocaleString("es-AR");
 
@@ -47,6 +43,10 @@ const formatPercent = (valor) => {
 };
 
 export default function DashboardFinanciero() {
+  const colores = useTemaColores();
+  const { COLOR_NAVY, COLOR_TEAL, COLOR_GREEN, COLOR_RED, COLOR_AMBER, GRID_STROKE, TEXT_MUTED, BG_CARD, BORDER, TOOLTIP_TEXT } = colores;
+  const styles = crearEstilos(colores);
+
   const [kpisExtra, setKpisExtra] = useState({
     variacionIngresos: 0,
     variacionGastos: 0,
@@ -251,10 +251,14 @@ export default function DashboardFinanciero() {
           <div style={{ flex: 1, minHeight: 240 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={datosFlujoResultado} margin={{ top: 10, right: 16, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef2f5" />
-                <XAxis dataKey="label" tick={{ fontSize: 12, fontFamily: FONT_FORMAL }} />
-                <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 11, fontFamily: FONT_FORMAL }} width={55} />
-                <Tooltip formatter={(value) => formatoNumero(value)} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={GRID_STROKE} />
+                <XAxis dataKey="label" tick={{ fontSize: 12, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }} />
+                <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 11, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }} width={55} />
+                <Tooltip
+                  formatter={(value) => formatoNumero(value)}
+                  contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+                  labelStyle={{ color: TOOLTIP_TEXT }}
+                />
                 <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                   {datosFlujoResultado.map((entry) => (
                     <Cell key={entry.label} fill={coloresFlujoResultado[entry.label] || COLOR_NAVY} />
@@ -346,6 +350,11 @@ function prepararDonutData(obj) {
 /* ---------------- COMPONENTES ---------------- */
 
 function DonutChart({ data }) {
+  const colores = useTemaColores();
+  const styles = crearEstilos(colores);
+  const PALETTE = crearPalette(colores);
+  const { BG_CARD, BORDER, TOOLTIP_TEXT } = colores;
+
   if (!data || data.length === 0) {
     return <div style={styles.sinDatos}>Sin datos para mostrar</div>;
   }
@@ -366,7 +375,11 @@ function DonutChart({ data }) {
               <Cell key={entry.label} fill={PALETTE[index % PALETTE.length]} />
             ))}
           </Pie>
-          <Tooltip formatter={(value, name, props) => [formatoNumero(value), `${name} (${props.payload.percentage.toFixed(1)}%)`]} />
+          <Tooltip
+            formatter={(value, name, props) => [formatoNumero(value), `${name} (${props.payload.percentage.toFixed(1)}%)`]}
+            contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+            labelStyle={{ color: TOOLTIP_TEXT }}
+          />
         </RPieChart>
       </ResponsiveContainer>
     </div>
@@ -374,6 +387,7 @@ function DonutChart({ data }) {
 }
 
 function KpiCard({ titulo, valor, color, icon, tipo = "money" }) {
+  const styles = crearEstilos(useTemaColores());
   const [display, setDisplay] = useState(0);
 
   useEffect(() => {
@@ -413,12 +427,16 @@ function KpiCard({ titulo, valor, color, icon, tipo = "money" }) {
   );
 }
 
-function SectionCard({ title, subtitle, icon, accent = COLOR_TEAL, children }) {
+function SectionCard({ title, subtitle, icon, accent, children }) {
+  const colores = useTemaColores();
+  const styles = crearEstilos(colores);
+  const accentColor = accent || colores.COLOR_TEAL;
+
   return (
     <div style={styles.section}>
       <div style={styles.sectionHeader}>
         {icon && (
-          <div style={{ ...styles.sectionIcon, background: `${accent}1a`, color: accent }}>
+          <div style={{ ...styles.sectionIcon, background: `${accentColor}1a`, color: accentColor }}>
             {icon}
           </div>
         )}
@@ -435,13 +453,13 @@ function SectionCard({ title, subtitle, icon, accent = COLOR_TEAL, children }) {
 
 /* ---------------- ESTILOS ---------------- */
 
-const styles = {
+const crearEstilos = (c) => ({
   page: {
     fontFamily: FONT_FORMAL,
     padding: 18,
     minHeight: "100vh",
     boxSizing: "border-box",
-    background: "#f4f7f9",
+    background: c.BG_PAGE,
   },
 
   header: {
@@ -465,13 +483,13 @@ const styles = {
     margin: 0,
     fontSize: 19,
     fontWeight: 700,
-    color: COLOR_NAVY,
+    color: c.COLOR_NAVY,
   },
 
   subtitle: {
     marginTop: 2,
     fontSize: 12.5,
-    color: "#64748B",
+    color: c.TEXT_MUTED,
     fontWeight: 500,
   },
 
@@ -483,14 +501,14 @@ const styles = {
   },
 
   card: {
-    background: "#fff",
+    background: c.BG_CARD,
     padding: 16,
     borderRadius: 14,
     display: "flex",
     alignItems: "center",
     gap: 12,
-    border: "1px solid rgba(8,59,92,0.06)",
-    boxShadow: "0 6px 18px rgba(8,59,92,0.07)",
+    border: `1px solid ${c.BORDER}`,
+    boxShadow: c.SHADOW_CARD,
     minWidth: 0,
   },
 
@@ -507,7 +525,7 @@ const styles = {
   cardTitle: {
     fontSize: 11.5,
     fontWeight: 700,
-    color: "#64748B",
+    color: c.TEXT_MUTED,
     textTransform: "uppercase",
     letterSpacing: 0.4,
   },
@@ -516,7 +534,7 @@ const styles = {
     fontSize: 18,
     fontWeight: 700,
     marginTop: 2,
-    color: COLOR_NAVY,
+    color: c.COLOR_NAVY,
     whiteSpace: "nowrap",
     overflow: "hidden",
     textOverflow: "ellipsis",
@@ -530,11 +548,11 @@ const styles = {
   },
 
   section: {
-    background: "#fff",
+    background: c.BG_CARD,
     borderRadius: 18,
     marginBottom: 18,
-    boxShadow: "0 6px 18px rgba(8,59,92,0.07)",
-    border: "1px solid rgba(8,59,92,0.06)",
+    boxShadow: c.SHADOW_CARD,
+    border: `1px solid ${c.BORDER}`,
     overflow: "hidden",
     display: "flex",
     flexDirection: "column",
@@ -561,13 +579,13 @@ const styles = {
     margin: 0,
     fontSize: 16,
     fontWeight: 700,
-    color: COLOR_NAVY,
+    color: c.COLOR_NAVY,
   },
 
   sectionSubtitle: {
     marginTop: 2,
     fontSize: 12,
-    color: "#64748B",
+    color: c.TEXT_MUTED,
     fontWeight: 500,
   },
 
@@ -582,8 +600,8 @@ const styles = {
   sinDatos: {
     textAlign: "center",
     padding: "34px 12px",
-    color: "#64748B",
+    color: c.TEXT_MUTED,
     fontSize: 13,
     fontWeight: 500,
   },
-};
+});

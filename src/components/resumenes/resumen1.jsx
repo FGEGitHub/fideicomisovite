@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import servicionivel3 from "../../services/nivel3";
+import { useTemaColores } from "../../context/ModoOscuroContext";
 
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
@@ -23,10 +24,6 @@ import {
   Cell,
 } from "recharts";
 
-const COLOR_NAVY = "#083b5c";
-const COLOR_TEAL = "#148D8D";
-const COLOR_GREEN = "#15803d";
-const COLOR_RED = "#dc2626";
 const FONT_FORMAL = "'Helvetica Neue', Helvetica, Arial, sans-serif";
 
 const formatoNumero = (valor) => "$" + Math.round(Number(valor) || 0).toLocaleString("es-AR");
@@ -36,29 +33,24 @@ const formatoCompacto = (valor) =>
     Number(valor) || 0
   );
 
-const styles = {
+const crearEstilos = (c) => ({
   dashboard: {
     fontFamily: FONT_FORMAL,
-    background: "#f4f7f9",
+    background: c.BG_PAGE,
     padding: 24,
     minHeight: "100vh",
     boxSizing: "border-box",
   },
 
   seccion: {
-    background: "#fff",
-    borderRadius: 18,
-    marginBottom: 22,
-    boxShadow: "0 6px 18px rgba(8,59,92,0.07)",
-    border: "1px solid rgba(8,59,92,0.06)",
-    overflow: "hidden",
+    marginBottom: 30,
   },
 
   seccionHeader: {
     display: "flex",
     alignItems: "center",
     gap: 12,
-    padding: "20px 22px 16px",
+    padding: "0 0 16px",
   },
 
   seccionIcon: {
@@ -72,7 +64,7 @@ const styles = {
   },
 
   seccionBody: {
-    padding: "0 22px 22px",
+    padding: 0,
   },
 
   subtitulo: {
@@ -80,13 +72,13 @@ const styles = {
     fontSize: 17,
     fontWeight: 700,
     letterSpacing: 0.1,
-    color: COLOR_NAVY,
+    color: c.COLOR_NAVY,
   },
 
   subtituloSecundario: {
     marginTop: 2,
     fontSize: 12.5,
-    color: "#64748B",
+    color: c.TEXT_MUTED,
     fontWeight: 600,
   },
 
@@ -104,17 +96,17 @@ const styles = {
   },
 
   cardGrafico: {
-    background: "#fff",
+    background: c.BG_CARD,
     borderRadius: 16,
     padding: 16,
-    border: "1px solid rgba(8,59,92,0.08)",
-    boxShadow: "0 4px 14px rgba(8,59,92,0.05)",
+    border: `1px solid ${c.BORDER}`,
+    boxShadow: c.SHADOW_CARD,
   },
 
   chartTitulo: {
     fontSize: 13,
     fontWeight: 600,
-    color: COLOR_NAVY,
+    color: c.COLOR_NAVY,
     marginBottom: 8,
   },
 
@@ -142,27 +134,28 @@ const styles = {
   label: {
     fontSize: 13,
     fontWeight: 600,
-    color: COLOR_NAVY,
+    color: c.COLOR_NAVY,
   },
 
   select: {
     padding: "10px 14px",
     borderRadius: 12,
-    border: "1px solid rgba(8,59,92,0.16)",
-    background: "#fff",
+    border: `1px solid ${c.BORDER_INPUT}`,
+    background: c.BG_INPUT,
     minWidth: 210,
     outline: "none",
     cursor: "pointer",
     fontSize: 13.5,
     fontWeight: 500,
-    color: COLOR_NAVY,
+    color: c.COLOR_NAVY,
+    colorScheme: c.MODO,
   },
 
   textoSecundario: {
     fontSize: 12.5,
-    color: COLOR_TEAL,
+    color: c.COLOR_TEAL,
     fontWeight: 600,
-    background: "rgba(20, 141, 141, 0.08)",
+    background: `${c.COLOR_TEAL}22`,
     padding: "8px 14px",
     borderRadius: 999,
   },
@@ -170,23 +163,23 @@ const styles = {
   sinDatos: {
     textAlign: "center",
     padding: "34px 12px",
-    color: "#64748B",
+    color: c.TEXT_MUTED,
     fontSize: 14,
     fontWeight: 600,
-    background: "#fff",
+    background: c.BG_CARD,
     borderRadius: 14,
-    border: "1px dashed rgba(148,163,184,0.3)",
+    border: `1px dashed ${c.BORDER_INPUT}`,
   },
 
   kpiCard: {
-    background: "#fff",
+    background: c.BG_CARD,
     borderRadius: 16,
     padding: 16,
     display: "flex",
     alignItems: "center",
     gap: 12,
-    boxShadow: "0 6px 18px rgba(8,59,92,0.07)",
-    border: "1px solid rgba(8,59,92,0.06)",
+    boxShadow: c.SHADOW_CARD,
+    border: `1px solid ${c.BORDER}`,
     minWidth: 0,
   },
 
@@ -202,7 +195,7 @@ const styles = {
 
   kpiLabel: {
     fontSize: 11.5,
-    color: "#64748B",
+    color: c.TEXT_MUTED,
     fontWeight: 600,
     textTransform: "uppercase",
     letterSpacing: 0.4,
@@ -212,11 +205,11 @@ const styles = {
     fontSize: 19,
     fontWeight: 700,
     marginTop: 2,
-    color: COLOR_NAVY,
+    color: c.COLOR_NAVY,
     lineHeight: 1.15,
     wordBreak: "break-word",
   },
-};
+});
 
 // Adapta el saldoArray (formato tabla: [encabezados, ...filas]) que ya devuelven
 // calcularResumenGeneral/calcularResumenPorPeriodo al formato de objetos que usa Recharts.
@@ -369,6 +362,10 @@ function formatearPeriodoCorto(periodo) {
 }
 
 export default function PanelFinanciero() {
+  const colores = useTemaColores();
+  const { COLOR_TEAL, COLOR_GREEN, COLOR_RED } = colores;
+  const styles = crearEstilos(colores);
+
   const [movimientos, setMovimientos] = useState([]);
   const [periodosDisponibles, setPeriodosDisponibles] = useState([]);
   const [periodoSeleccionado, setPeriodoSeleccionado] = useState("");
@@ -385,6 +382,9 @@ export default function PanelFinanciero() {
 
   const [datosGeneral, setDatosGeneral] = useState([]);
   const [datosMes, setDatosMes] = useState([]);
+
+  const [flujoGeneral, setFlujoGeneral] = useState([]);
+  const [flujoMes, setFlujoMes] = useState([]);
 
   const timersRef = useRef({});
 
@@ -403,6 +403,7 @@ export default function PanelFinanciero() {
       setIngresosGeneralesAnim(0);
       setEgresosGeneralesAnim(0);
       setDatosGeneral([]);
+      setFlujoGeneral([]);
       return;
     }
 
@@ -415,6 +416,7 @@ export default function PanelFinanciero() {
     animarNumero(resumenGeneral.totalEgresos, setEgresosGeneralesAnim, "egGeneral");
 
     setDatosGeneral(convertirSaldoArray(resumenGeneral.saldoArray));
+    setFlujoGeneral(resumenGeneral.flujoArray);
   }, [movimientos]);
 
   useEffect(() => {
@@ -424,6 +426,7 @@ export default function PanelFinanciero() {
       setIngresosMesAnim(0);
       setEgresosMesAnim(0);
       setDatosMes([]);
+      setFlujoMes([]);
       return;
     }
 
@@ -436,6 +439,7 @@ export default function PanelFinanciero() {
     animarNumero(resumenMes.totalEgresos, setEgresosMesAnim, "egMes");
 
     setDatosMes(convertirSaldoArray(resumenMes.saldoArray));
+    setFlujoMes(resumenMes.flujoArray);
   }, [movimientos, periodoSeleccionado]);
 
   const traerDatos = async () => {
@@ -533,10 +537,20 @@ export default function PanelFinanciero() {
       ]);
     });
 
+  // Flujo NO acumulado por período (ingresos/egresos de cada mes, no el acumulado)
+  const flujoArray = Object.keys(acumuladoPorPeriodo)
+    .sort((a, b) => a.localeCompare(b))
+    .map((periodo) => ({
+      label: formatearPeriodoCorto(periodo),
+      ingresos: ingresosPorPeriodo[periodo],
+      egresos: egresosPorPeriodo[periodo],
+    }));
+
   return {
     totalIngresos,
     totalEgresos,
     saldoArray,
+    flujoArray,
   };
 }
 
@@ -598,10 +612,20 @@ export default function PanelFinanciero() {
     saldoArray.push([formatearPeriodo(periodoSeleccionadoActual), 0, 0, 0]);
   }
 
+  // Flujo NO acumulado por día (ingresos/egresos de cada día del mes seleccionado)
+  const flujoArray = Object.keys(acumuladoPorFecha)
+    .sort((a, b) => a.localeCompare(b))
+    .map((fechaIso) => ({
+      label: formatearFecha(fechaIso),
+      ingresos: ingresosPorFecha[fechaIso],
+      egresos: egresosPorFecha[fechaIso],
+    }));
+
   return {
     totalIngresos,
     totalEgresos,
     saldoArray,
+    flujoArray,
   };
 }
   const resultadoGeneral = ingresosGenerales - egresosGenerales;
@@ -615,13 +639,13 @@ export default function PanelFinanciero() {
   const datosBarraGeneral = [
     { concepto: "Ingresos", monto: ingresosGenerales, fill: COLOR_GREEN },
     { concepto: "Egresos", monto: egresosGenerales, fill: COLOR_RED },
-    { concepto: "Resultado", monto: resultadoGeneral, fill: "#0B4F6C" },
+    { concepto: "Resultado", monto: resultadoGeneral, fill: "#3b82f6" },
   ];
 
   const datosBarraMes = [
     { concepto: "Ingresos", monto: ingresosMes, fill: COLOR_GREEN },
     { concepto: "Egresos", monto: egresosMes, fill: COLOR_RED },
-    { concepto: "Resultado", monto: resultadoMes, fill: "#0B4F6C" },
+    { concepto: "Resultado", monto: resultadoMes, fill: "#3b82f6" },
   ];
 
   return (
@@ -637,13 +661,13 @@ export default function PanelFinanciero() {
           <Card
             titulo="Resultado"
             valor={resultadoGeneral}
-            color={resultadoGeneral < 0 ? COLOR_RED : "#148D8D"}
+            color={resultadoGeneral < 0 ? COLOR_RED : COLOR_TEAL}
             icon={<AccountBalanceWalletIcon />}
           />
           <Card
             titulo="Egreso / Ingreso"
             valor={proporcionGeneral + "%"}
-            color="#0B4F6C"
+            color="#3b82f6"
             icon={<PercentIcon />}
           />
         </div>
@@ -660,6 +684,13 @@ export default function PanelFinanciero() {
             <div style={styles.chartTitulo}>Evolución de saldo</div>
             <div style={styles.chartInner}>
               <EvolucionSaldo data={datosGeneral} />
+            </div>
+          </div>
+
+          <div style={styles.cardGrafico}>
+            <div style={styles.chartTitulo}>Flujo de ingresos y egresos</div>
+            <div style={styles.chartInner}>
+              <FlujoIngresosEgresos data={flujoGeneral} gradientId="gradFlujoGeneral" />
             </div>
           </div>
         </div>
@@ -700,13 +731,13 @@ export default function PanelFinanciero() {
           <Card
             titulo="Resultado"
             valor={resultadoMes}
-            color={resultadoMes < 0 ? COLOR_RED : "#148D8D"}
+            color={resultadoMes < 0 ? COLOR_RED : COLOR_TEAL}
             icon={<AccountBalanceWalletIcon />}
           />
           <Card
             titulo="Egreso / Ingreso"
             valor={proporcionMes + "%"}
-            color="#0B4F6C"
+            color="#3b82f6"
             icon={<PercentIcon />}
           />
         </div>
@@ -726,6 +757,13 @@ export default function PanelFinanciero() {
                 <EvolucionSaldo data={datosMes} />
               </div>
             </div>
+
+            <div style={styles.cardGrafico}>
+              <div style={styles.chartTitulo}>Flujo de ingresos y egresos</div>
+              <div style={styles.chartInner}>
+                <FlujoIngresosEgresos data={flujoMes} gradientId="gradFlujoMes" />
+              </div>
+            </div>
           </div>
         ) : (
           <div style={styles.sinDatos}>No hay datos disponibles para ese período.</div>
@@ -738,11 +776,14 @@ export default function PanelFinanciero() {
 }
 
 function SectionCard({ title, subtitle, icon, children }) {
+  const colores = useTemaColores();
+  const styles = crearEstilos(colores);
+
   return (
     <div style={styles.seccion}>
       <div style={styles.seccionHeader}>
         {icon && (
-          <div style={{ ...styles.seccionIcon, background: `${COLOR_TEAL}1a`, color: COLOR_TEAL }}>
+          <div style={{ ...styles.seccionIcon, background: `${colores.COLOR_TEAL}1a`, color: colores.COLOR_TEAL }}>
             {icon}
           </div>
         )}
@@ -757,6 +798,8 @@ function SectionCard({ title, subtitle, icon, children }) {
 }
 
 function Card({ titulo, valor, color, icon }) {
+  const styles = crearEstilos(useTemaColores());
+
   return (
     <div style={styles.kpiCard}>
       {icon && (
@@ -778,13 +821,19 @@ function Card({ titulo, valor, color, icon }) {
 }
 
 function BarraConceptos({ data }) {
+  const { GRID_STROKE, TEXT_MUTED, BG_CARD, BORDER, TOOLTIP_TEXT } = useTemaColores();
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef2f5" />
-        <XAxis dataKey="concepto" tick={{ fontSize: 12, fontFamily: FONT_FORMAL }} />
-        <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 11, fontFamily: FONT_FORMAL }} width={55} />
-        <Tooltip formatter={(value) => formatoNumero(value)} />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={GRID_STROKE} />
+        <XAxis dataKey="concepto" tick={{ fontSize: 12, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }} />
+        <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 11, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }} width={55} />
+        <Tooltip
+          formatter={(value) => formatoNumero(value)}
+          contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+          labelStyle={{ color: TOOLTIP_TEXT }}
+        />
         <Bar dataKey="monto" radius={[6, 6, 0, 0]}>
           {data.map((entry) => (
             <Cell key={entry.concepto} fill={entry.fill} />
@@ -796,31 +845,80 @@ function BarraConceptos({ data }) {
 }
 
 function EvolucionSaldo({ data }) {
+  const { GRID_STROKE, TEXT_MUTED, BG_CARD, BORDER, TOOLTIP_TEXT, COLOR_GREEN, COLOR_RED } = useTemaColores();
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <ComposedChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
         <defs>
           <linearGradient id="gradSaldoResumen1" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#0B4F6C" stopOpacity={0.25} />
-            <stop offset="100%" stopColor="#0B4F6C" stopOpacity={0} />
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.25} />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef2f5" />
-        <XAxis dataKey="label" tick={{ fontSize: 11, fontFamily: FONT_FORMAL }} />
-        <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 11, fontFamily: FONT_FORMAL }} width={55} />
-        <Tooltip formatter={(value) => formatoNumero(value)} />
-        <Legend wrapperStyle={{ fontSize: 12, fontFamily: FONT_FORMAL }} />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={GRID_STROKE} />
+        <XAxis dataKey="label" tick={{ fontSize: 11, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }} />
+        <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 11, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }} width={55} />
+        <Tooltip
+          formatter={(value) => formatoNumero(value)}
+          contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+          labelStyle={{ color: TOOLTIP_TEXT }}
+        />
+        <Legend wrapperStyle={{ fontSize: 12, fontFamily: FONT_FORMAL, color: TEXT_MUTED }} />
         <Area
           type="monotone"
           dataKey="saldo"
           name="Saldo"
-          stroke="#0B4F6C"
+          stroke="#3b82f6"
           strokeWidth={3}
           fill="url(#gradSaldoResumen1)"
-          dot={{ r: 2.5, fill: "#0B4F6C" }}
+          dot={{ r: 2.5, fill: "#3b82f6" }}
         />
         <Line type="monotone" dataKey="ingresos" name="Ingresos" stroke={COLOR_GREEN} strokeWidth={2} dot={false} />
         <Line type="monotone" dataKey="egresos" name="Egresos" stroke={COLOR_RED} strokeWidth={2} dot={false} />
+      </ComposedChart>
+    </ResponsiveContainer>
+  );
+}
+
+function FlujoIngresosEgresos({ data, gradientId }) {
+  const { GRID_STROKE, TEXT_MUTED, BG_CARD, BORDER, TOOLTIP_TEXT, COLOR_GREEN, COLOR_RED } = useTemaColores();
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <ComposedChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={COLOR_GREEN} stopOpacity={0.28} />
+            <stop offset="100%" stopColor={COLOR_GREEN} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={GRID_STROKE} />
+        <XAxis dataKey="label" tick={{ fontSize: 11, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }} />
+        <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 11, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }} width={55} />
+        <Tooltip
+          formatter={(value) => formatoNumero(value)}
+          contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+          labelStyle={{ color: TOOLTIP_TEXT }}
+        />
+        <Legend wrapperStyle={{ fontSize: 12, fontFamily: FONT_FORMAL, color: TEXT_MUTED }} />
+        <Area
+          type="monotone"
+          dataKey="ingresos"
+          name="Ingresos"
+          stroke={COLOR_GREEN}
+          strokeWidth={2.5}
+          fill={`url(#${gradientId})`}
+          dot={{ r: 3, fill: COLOR_GREEN }}
+        />
+        <Line
+          type="monotone"
+          dataKey="egresos"
+          name="Egresos"
+          stroke={COLOR_RED}
+          strokeWidth={3}
+          dot={{ r: 3.5, fill: COLOR_RED }}
+        />
       </ComposedChart>
     </ResponsiveContainer>
   );

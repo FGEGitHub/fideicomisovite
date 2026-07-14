@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import servicionivel3 from "../../services/nivel3";
+import { useTemaColores } from "../../context/ModoOscuroContext";
 
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import ShowChartIcon from "@mui/icons-material/ShowChart";
@@ -20,14 +21,12 @@ import {
   Pie,
 } from "recharts";
 
-const COLOR_NAVY = "#083b5c";
-const COLOR_TEAL = "#148D8D";
-const COLOR_GREEN = "#15803d";
-const COLOR_RED = "#b3564f";
 const FONT_FORMAL = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+
 // Paleta solo para "Egresos por concepto": evita el verde a propósito,
 // porque en el resto del dashboard el verde significa "ingreso".
-const PIE_COLORS = [COLOR_RED, "#c98a3e", "#2aaad1", COLOR_TEAL, "#7c6bb0", "#5b8fa3", COLOR_NAVY, "#946b53"];
+const crearPieColors = (c) => [c.COLOR_RED, "#c98a3e", "#2aaad1", c.COLOR_TEAL, "#9b8bd4", "#7db8cf", c.COLOR_NAVY, "#c08a6e"];
+
 const MESES_LARGOS = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
@@ -48,6 +47,11 @@ const formatearMesLargo = (clave) => {
 };
 
 export default function DashboardFinanciero() {
+  const colores = useTemaColores();
+  const { COLOR_NAVY, COLOR_RED, GRID_STROKE, TEXT_MUTED, BG_CARD, BORDER, TOOLTIP_TEXT } = colores;
+  const styles = crearEstilos(colores);
+  const PIE_COLORS = crearPieColors(colores);
+
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
   const [modoVista, setModoVista] = useState("dia"); // "dia" o "mes"
@@ -274,12 +278,9 @@ export default function DashboardFinanciero() {
             isNarrow={isNarrow}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
-              <div style={styles.textoSecundario}>
-                Mostrando: {formatearMesLargo(mesSeleccionado)}
-              </div>
-
+              
               <select
-                style={selectStyle(isNarrow)}
+                style={selectStyle(isNarrow, styles)}
                 value={mesSeleccionado}
                 onChange={(e) => setMesSeleccionado(e.target.value)}
               >
@@ -297,15 +298,19 @@ export default function DashboardFinanciero() {
                   layout="vertical"
                   margin={{ top: 5, right: isNarrow ? 16 : 40, left: 10, bottom: 5 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#eef2f5" />
-                  <XAxis type="number" tickFormatter={formatoCompacto} tick={{ fontSize: isNarrow ? 10 : 11, fontFamily: FONT_FORMAL }} />
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={GRID_STROKE} />
+                  <XAxis type="number" tickFormatter={formatoCompacto} tick={{ fontSize: isNarrow ? 10 : 11, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }} />
                   <YAxis
                     type="category"
                     dataKey="concepto"
                     width={isNarrow ? 90 : isMobile ? 110 : 190}
-                    tick={{ fontSize: isNarrow ? 10 : 11.5, fontFamily: FONT_FORMAL }}
+                    tick={{ fontSize: isNarrow ? 10 : 11.5, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }}
                   />
-                  <Tooltip formatter={(value) => formatoNumero(value)} />
+                  <Tooltip
+                    formatter={(value) => formatoNumero(value)}
+                    contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+                    labelStyle={{ color: TOOLTIP_TEXT }}
+                  />
                   <Bar dataKey="monto" radius={[0, 6, 6, 0]}>
                     {egresos.map((entry) => (
                       <Cell key={entry.concepto} fill={COLOR_RED} />
@@ -323,7 +328,7 @@ export default function DashboardFinanciero() {
             accent={COLOR_NAVY}
             isNarrow={isNarrow}
           >
-            <div style={{ marginBottom: 10 }}>
+            <div style={{ marginBottom: 10, display: "flex", justifyContent: "flex-end" }}>
               <div style={styles.textoSecundario}>
                 Mostrando: {formatearMesLargo(mesSeleccionado)}
               </div>
@@ -344,7 +349,11 @@ export default function DashboardFinanciero() {
                       <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => formatoNumero(value)} />
+                  <Tooltip
+                    formatter={(value) => formatoNumero(value)}
+                    contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+                    labelStyle={{ color: TOOLTIP_TEXT }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -358,14 +367,14 @@ export default function DashboardFinanciero() {
           accent={COLOR_RED}
           isNarrow={isNarrow}
         >
-          <div style={filtroWrapStyle(isNarrow)}>
-            <div style={filtroGrupoStyle(isNarrow)}>
+          <div style={filtroWrapStyle(isNarrow, styles)}>
+            <div style={filtroGrupoStyle(isNarrow, styles)}>
               <span style={styles.filtroLabel}>Período</span>
-              <input type="date" style={inputStyle(isNarrow)} value={fechaDesde} onChange={(e) => setFechaDesde(e.target.value)} />
-              <input type="date" style={inputStyle(isNarrow)} value={fechaHasta} onChange={(e) => setFechaHasta(e.target.value)} />
+              <input type="date" style={inputStyle(isNarrow, styles)} value={fechaDesde} onChange={(e) => setFechaDesde(e.target.value)} />
+              <input type="date" style={inputStyle(isNarrow, styles)} value={fechaHasta} onChange={(e) => setFechaHasta(e.target.value)} />
             </div>
 
-            <select style={selectStyle(isNarrow)} value={modoVista} onChange={(e) => setModoVista(e.target.value)}>
+            <select style={selectStyle(isNarrow, styles)} value={modoVista} onChange={(e) => setModoVista(e.target.value)}>
               <option value="dia">Por día</option>
               <option value="mes">Por mes</option>
             </select>
@@ -380,10 +389,14 @@ export default function DashboardFinanciero() {
                     <stop offset="100%" stopColor={COLOR_RED} stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef2f5" />
-                <XAxis dataKey="fecha" tick={{ fontSize: 11, fontFamily: FONT_FORMAL }} />
-                <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 10, fontFamily: FONT_FORMAL }} width={50} />
-                <Tooltip formatter={(value) => formatoNumero(value)} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={GRID_STROKE} />
+                <XAxis dataKey="fecha" tick={{ fontSize: 11, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }} />
+                <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 10, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }} width={50} />
+                <Tooltip
+                  formatter={(value) => formatoNumero(value)}
+                  contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+                  labelStyle={{ color: TOOLTIP_TEXT }}
+                />
                 <Area
                   type="monotone"
                   dataKey="monto"
@@ -402,12 +415,16 @@ export default function DashboardFinanciero() {
   );
 }
 
-function SectionCard({ title, subtitle, icon, accent = COLOR_TEAL, isNarrow, children }) {
+function SectionCard({ title, subtitle, icon, accent, isNarrow, children }) {
+  const colores = useTemaColores();
+  const styles = crearEstilos(colores);
+  const accentColor = accent || colores.COLOR_TEAL;
+
   return (
     <div style={styles.section}>
       <div style={{ ...styles.sectionHeader, padding: isNarrow ? "14px 14px 12px" : styles.sectionHeader.padding }}>
         {icon && (
-          <div style={{ ...styles.sectionIcon, background: `${accent}1a`, color: accent }}>
+          <div style={{ ...styles.sectionIcon, background: `${accentColor}1a`, color: accentColor }}>
             {icon}
           </div>
         )}
@@ -424,13 +441,13 @@ function SectionCard({ title, subtitle, icon, accent = COLOR_TEAL, isNarrow, chi
   );
 }
 
-const styles = {
+const crearEstilos = (c) => ({
   page: {
     width: "100%",
     minWidth: 0,
     padding: 12,
     boxSizing: "border-box",
-    background: "#f4f7f9",
+    background: c.BG_PAGE,
     fontFamily: FONT_FORMAL,
   },
 
@@ -441,11 +458,11 @@ const styles = {
   },
 
   section: {
-    background: "#fff",
+    background: c.BG_CARD,
     borderRadius: 18,
     marginBottom: 20,
-    boxShadow: "0 6px 18px rgba(8,59,92,0.07)",
-    border: "1px solid rgba(8,59,92,0.06)",
+    boxShadow: c.SHADOW_CARD,
+    border: `1px solid ${c.BORDER}`,
     overflow: "hidden",
     display: "flex",
     flexDirection: "column",
@@ -472,13 +489,13 @@ const styles = {
     margin: 0,
     fontSize: 16,
     fontWeight: 700,
-    color: COLOR_NAVY,
+    color: c.COLOR_NAVY,
   },
 
   sectionSubtitle: {
     marginTop: 2,
     fontSize: 12,
-    color: "#64748B",
+    color: c.TEXT_MUTED,
     fontWeight: 500,
   },
 
@@ -515,14 +532,14 @@ const styles = {
   filtroLabel: {
     fontSize: 11.5,
     fontWeight: 600,
-    color: "#64748B",
+    color: c.TEXT_MUTED,
   },
 
   textoSecundario: {
     fontSize: 12,
-    color: COLOR_RED,
+    color: c.COLOR_RED,
     fontWeight: 600,
-    background: "rgba(179, 86, 79, 0.1)",
+    background: `${c.COLOR_RED}22`,
     padding: "6px 12px",
     borderRadius: 999,
   },
@@ -530,22 +547,25 @@ const styles = {
   input: {
     padding: "6px 9px",
     borderRadius: 9,
-    border: "1px solid rgba(8,59,92,0.16)",
+    border: `1px solid ${c.BORDER_INPUT}`,
     fontSize: 12.5,
     fontFamily: FONT_FORMAL,
-    color: COLOR_NAVY,
+    color: c.COLOR_NAVY,
+    background: c.BG_INPUT,
+    colorScheme: c.MODO,
     outline: "none",
   },
 
   select: {
     padding: "6px 9px",
     borderRadius: 9,
-    border: "1px solid rgba(8,59,92,0.16)",
-    background: "#fff",
+    border: `1px solid ${c.BORDER_INPUT}`,
+    background: c.BG_INPUT,
     fontSize: 12.5,
     fontFamily: FONT_FORMAL,
     fontWeight: 500,
-    color: COLOR_NAVY,
+    color: c.COLOR_NAVY,
+    colorScheme: c.MODO,
     outline: "none",
     cursor: "pointer",
   },
@@ -554,37 +574,37 @@ const styles = {
     width: "100%",
     borderCollapse: "collapse",
     fontSize: 12.5,
-    color: "#0F172A",
+    color: c.TEXT_FUERTE,
     minWidth: 300,
   },
 
   th: {
     textAlign: "left",
     padding: "9px 12px",
-    borderBottom: "1px solid #E5E7EB",
-    background: "#F8FAFC",
+    borderBottom: `1px solid ${c.BORDER}`,
+    background: c.BG_INPUT,
     position: "sticky",
     top: 0,
     zIndex: 1,
     fontSize: 12,
     fontWeight: 700,
-    color: COLOR_NAVY,
+    color: c.COLOR_NAVY,
   },
 
   td: {
     padding: "9px 12px",
-    borderBottom: "1px solid #F1F5F9",
+    borderBottom: `1px solid ${c.BORDER}`,
     verticalAlign: "top",
     fontSize: 12.5,
   },
 
   tdMonto: {
     padding: "9px 12px",
-    borderBottom: "1px solid #F1F5F9",
+    borderBottom: `1px solid ${c.BORDER}`,
     verticalAlign: "top",
     fontSize: 12.5,
     fontWeight: 700,
-    color: COLOR_NAVY,
+    color: c.COLOR_NAVY,
     whiteSpace: "nowrap",
   },
 
@@ -594,15 +614,15 @@ const styles = {
     overflowX: "auto",
     padding: 10,
     boxSizing: "border-box",
-    background: "#fff",
+    background: c.BG_CARD,
     borderRadius: 14,
-    border: "1px solid rgba(148,163,184,0.14)",
+    border: `1px solid ${c.BORDER}`,
   },
-};
+});
 
 // Helpers responsive: en pantallas angostas los filtros se apilan en columna
 // y los inputs ocupan todo el ancho, en vez de amontonarse en una fila.
-function filtroWrapStyle(isNarrow) {
+function filtroWrapStyle(isNarrow, styles) {
   return {
     ...styles.filtroWrap,
     flexDirection: isNarrow ? "column" : "row",
@@ -610,7 +630,7 @@ function filtroWrapStyle(isNarrow) {
   };
 }
 
-function filtroGrupoStyle(isNarrow) {
+function filtroGrupoStyle(isNarrow, styles) {
   return {
     ...styles.filtroGrupo,
     flexDirection: isNarrow ? "column" : "row",
@@ -618,10 +638,10 @@ function filtroGrupoStyle(isNarrow) {
   };
 }
 
-function inputStyle(isNarrow) {
+function inputStyle(isNarrow, styles) {
   return { ...styles.input, width: isNarrow ? "100%" : undefined, boxSizing: "border-box" };
 }
 
-function selectStyle(isNarrow) {
+function selectStyle(isNarrow, styles) {
   return { ...styles.select, width: isNarrow ? "100%" : undefined, boxSizing: "border-box" };
 }

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import servicionivel3 from "../../services/nivel3";
+import { useTemaColores } from "../../context/ModoOscuroContext";
 
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
@@ -19,10 +20,6 @@ import {
   Cell,
 } from "recharts";
 
-const COLOR_NAVY = "#083b5c";
-const COLOR_TEAL = "#148D8D";
-const COLOR_GREEN = "#15803d";
-const COLOR_RED = "#b3564f";
 const FONT_FORMAL = "'Helvetica Neue', Helvetica, Arial, sans-serif";
 
 const formatoNumero = (valor) => "$" + Math.round(Number(valor) || 0).toLocaleString("es-AR");
@@ -33,6 +30,9 @@ const formatoCompacto = (valor) =>
   );
 
 export default function DashboardPro() {
+  const colores = useTemaColores();
+  const { COLOR_NAVY, COLOR_TEAL, COLOR_GREEN, COLOR_RED, GRID_STROKE, TEXT_MUTED, BG_CARD, BORDER, TOOLTIP_TEXT } = colores;
+  const styles = crearEstilos(colores);
 
   const [data, setData] = useState({
     ingresos: [],
@@ -171,10 +171,14 @@ export default function DashboardPro() {
                   <stop offset="100%" stopColor={COLOR_TEAL} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef2f5" />
-              <XAxis dataKey="mes" tick={{ fontSize: 12, fontFamily: FONT_FORMAL }} />
-              <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 11, fontFamily: FONT_FORMAL }} width={55} />
-              <Tooltip formatter={(value) => formatoNumero(value)} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={GRID_STROKE} />
+              <XAxis dataKey="mes" tick={{ fontSize: 12, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }} />
+              <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 11, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }} width={55} />
+              <Tooltip
+                formatter={(value) => formatoNumero(value)}
+                contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+                labelStyle={{ color: TOOLTIP_TEXT }}
+              />
               <Area
                 type="monotone"
                 dataKey="saldo"
@@ -206,6 +210,10 @@ export default function DashboardPro() {
 /* ---------------- COMPONENTES ---------------- */
 
 function RankingChart({ data, color }) {
+  const colores = useTemaColores();
+  const styles = crearEstilos(colores);
+  const { GRID_STROKE, TEXT_MUTED, BG_CARD, BORDER, TOOLTIP_TEXT } = colores;
+
   if (!data.length) {
     return <div style={styles.sinDatos}>Sin datos para mostrar</div>;
   }
@@ -214,15 +222,19 @@ function RankingChart({ data, color }) {
     <div style={{ height: Math.max(200, data.length * 32) }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#eef2f5" />
-          <XAxis type="number" tickFormatter={formatoCompacto} tick={{ fontSize: 11, fontFamily: FONT_FORMAL }} />
+          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={GRID_STROKE} />
+          <XAxis type="number" tickFormatter={formatoCompacto} tick={{ fontSize: 11, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }} />
           <YAxis
             type="category"
             dataKey="concepto"
             width={150}
-            tick={{ fontSize: 11.5, fontFamily: FONT_FORMAL }}
+            tick={{ fontSize: 11.5, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }}
           />
-          <Tooltip formatter={(value) => formatoNumero(value)} />
+          <Tooltip
+            formatter={(value) => formatoNumero(value)}
+            contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+            labelStyle={{ color: TOOLTIP_TEXT }}
+          />
           <Bar dataKey="monto" radius={[0, 6, 6, 0]}>
             {data.map((entry) => (
               <Cell key={entry.concepto} fill={color} />
@@ -235,6 +247,8 @@ function RankingChart({ data, color }) {
 }
 
 function SectionCard({ title, subtitle, children }) {
+  const styles = crearEstilos(useTemaColores());
+
   return (
     <div style={styles.card}>
       <h3 style={styles.cardTitle}>{title}</h3>
@@ -245,6 +259,8 @@ function SectionCard({ title, subtitle, children }) {
 }
 
 function Card({ title, value, color, icon }) {
+  const styles = crearEstilos(useTemaColores());
+
   return (
     <div style={styles.cardMini}>
       <div style={{ ...styles.cardMiniIcon, background: `${color}1a`, color }}>{icon}</div>
@@ -258,11 +274,11 @@ function Card({ title, value, color, icon }) {
 
 /* ---------------- ESTILOS ---------------- */
 
-const styles = {
+const crearEstilos = (c) => ({
 
   container: {
     padding: 24,
-    background: "#f4f7f9",
+    background: c.BG_PAGE,
     minHeight: "100vh",
     fontFamily: FONT_FORMAL,
     boxSizing: "border-box",
@@ -289,13 +305,13 @@ const styles = {
     margin: 0,
     fontSize: 19,
     fontWeight: 700,
-    color: COLOR_NAVY,
+    color: c.COLOR_NAVY,
   },
 
   subtitle: {
     marginTop: 2,
     fontSize: 12.5,
-    color: "#64748B",
+    color: c.TEXT_MUTED,
     fontWeight: 500,
   },
 
@@ -313,37 +329,37 @@ const styles = {
   },
 
   card: {
-    background: "#fff",
+    background: c.BG_CARD,
     padding: 20,
     borderRadius: 16,
     marginBottom: 20,
-    border: "1px solid rgba(8,59,92,0.06)",
-    boxShadow: "0 6px 18px rgba(8,59,92,0.07)",
+    border: `1px solid ${c.BORDER}`,
+    boxShadow: c.SHADOW_CARD,
   },
 
   cardTitle: {
     margin: 0,
     fontSize: 15,
     fontWeight: 700,
-    color: COLOR_NAVY,
+    color: c.COLOR_NAVY,
   },
 
   cardSubtitle: {
     marginTop: 2,
     fontSize: 12,
-    color: "#64748B",
+    color: c.TEXT_MUTED,
     fontWeight: 500,
   },
 
   cardMini: {
-    background: "#fff",
+    background: c.BG_CARD,
     padding: 16,
     borderRadius: 14,
     display: "flex",
     alignItems: "center",
     gap: 12,
-    border: "1px solid rgba(8,59,92,0.06)",
-    boxShadow: "0 6px 18px rgba(8,59,92,0.07)",
+    border: `1px solid ${c.BORDER}`,
+    boxShadow: c.SHADOW_CARD,
     minWidth: 0,
   },
 
@@ -360,7 +376,7 @@ const styles = {
   cardMiniLabel: {
     fontSize: 11.5,
     fontWeight: 700,
-    color: "#64748B",
+    color: c.TEXT_MUTED,
     textTransform: "uppercase",
     letterSpacing: 0.4,
   },
@@ -368,16 +384,16 @@ const styles = {
   cardMiniValue: {
     fontSize: 19,
     fontWeight: 700,
-    color: COLOR_NAVY,
+    color: c.COLOR_NAVY,
     marginTop: 2,
   },
 
   sinDatos: {
     textAlign: "center",
     padding: "34px 12px",
-    color: "#64748B",
+    color: c.TEXT_MUTED,
     fontSize: 13,
     fontWeight: 500,
   },
 
-};
+});

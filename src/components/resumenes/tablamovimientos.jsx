@@ -1,6 +1,7 @@
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import servicionivel3 from "../../services/nivel3";
+import { parseFechaCorta, valorFecha, filtrarMovimientos, hayFiltrosActivos } from "./movimientosUtils";
 import {
   Dialog,
   DialogTitle,
@@ -21,10 +22,8 @@ import {
   Chip,
 } from "@mui/material";
 import { Autocomplete } from "@mui/material";
-import FilterAltIcon from "@mui/icons-material/FilterAlt";
-
-const COLOR_NAVY = "#083b5c";
-const COLOR_TEAL = "#148D8D";
+import ClearIcon from "@mui/icons-material/Clear";
+import { useTemaColores } from "../../context/ModoOscuroContext";
 
 const CONCEPTOS = [];
 const categoriasEgresos = [
@@ -48,34 +47,15 @@ const categoriasEgresos = [
   "Impuestos AFIP",
   "Comisiones bancarias"
 ];
-export default function MovimientosTabla() {
-  const [movimientos, setMovimientos] = useState([]);
-  const [search, setSearch] = useState("");
- const [filtroTipo, setFiltroTipo] = useState("");
-const [filtroMes, setFiltroMes] = useState("");
-const [filtroAnio, setFiltroAnio] = useState("");
-const [filtroCuit, setFiltroCuit] = useState("");
-const [filtroFecha, setFiltroFecha] = useState("");
-const [filtroConcepto, setFiltroConcepto] = useState("");
-  const [ordenCampo, setOrdenCampo] = useState("fecha");
-  const [ordenDireccion, setOrdenDireccion] = useState("desc");
+export default function MovimientosTabla({ movimientos, filtros, onFiltroChange, onLimpiarFiltros, onConceptoActualizado }) {
+  const { COLOR_TEAL, COLOR_GREEN, COLOR_RED, BG_PAGE, BG_INPUT, TEXT_FUERTE } = useTemaColores();
 
   const [openDialog, setOpenDialog] = useState(false);
   const [movSeleccionado, setMovSeleccionado] = useState(null);
   const [nuevoConcepto, setNuevoConcepto] = useState("");
 
-  useEffect(() => {
-    traerMovimientos();
-  }, []);
-
-  const traerMovimientos = async () => {
-    try {
-      const data = await servicionivel3.traermovimientos();
-      setMovimientos(data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  const { tipo: filtroTipo, mes: filtroMes, anio: filtroAnio, concepto: filtroConcepto, cuit: filtroCuit } = filtros;
+  const filtrosActivos = hayFiltrosActivos(filtros);
 
   const abrirDialog = (row) => {
     setMovSeleccionado(row);
@@ -88,21 +68,8 @@ const [filtroConcepto, setFiltroConcepto] = useState("");
     setMovSeleccionado(null);
   };
 
-  const parseFecha = (fecha) => {
-    if (!fecha) return { dia: "-", mes: "-", anio: "-" };
-    if (fecha.includes("-")) {
-      const [anio, mes, dia] = fecha.split(" ")[0].split("-");
-      return { dia, mes, anio };
-    }
-    if (fecha.includes("/")) {
-      const [dia, mes, anio] = fecha.split(" ")[0].split("/");
-      return { dia, mes, anio };
-    }
-    return { dia: "-", mes: "-", anio: "-" };
-  };
-
   const formatearFecha = (fecha) => {
-    const { dia, mes, anio } = parseFecha(fecha);
+    const { dia, mes, anio } = parseFechaCorta(fecha);
     return `${dia}/${mes}/${anio}`;
   };
 
@@ -126,19 +93,8 @@ const [filtroConcepto, setFiltroConcepto] = useState("");
     return `${dia}/${mes}/${anio} ${hora?.substring(0, 5)}`;
   };
 
-  const valorFecha = (fecha) => {
-    if (!fecha) return 0;
-    const limpia = fecha.replace("T", " ").split(".")[0];
-    if (limpia.includes("-")) return new Date(limpia).getTime();
-    if (limpia.includes("/")) {
-      const [dia, mes, anio] = limpia.split(" ")[0].split("/");
-      return new Date(`${anio}-${mes}-${dia}`).getTime();
-    }
-    return 0;
-  };
-
-  const getMes = (fecha) => parseFecha(fecha).mes;
-  const getAnio = (fecha) => parseFecha(fecha).anio;
+  const getMes = (fecha) => parseFechaCorta(fecha).mes;
+  const getAnio = (fecha) => parseFechaCorta(fecha).anio;
 
   const nombreMes = (mes) =>
     ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"][Number(mes)-1] || "-";
@@ -150,11 +106,7 @@ const [filtroConcepto, setFiltroConcepto] = useState("");
         concepto: nuevoConcepto,
       });
 
-      setMovimientos((prev) =>
-        prev.map((m) =>
-          m.id === movSeleccionado.id ? { ...m, concepto: nuevoConcepto } : m
-        )
-      );
+      onConceptoActualizado(movSeleccionado.id, nuevoConcepto);
 
       cerrarDialog();
     } catch (error) {
@@ -169,59 +121,18 @@ const [filtroConcepto, setFiltroConcepto] = useState("");
     (a, b) => a.localeCompare(b, "es")
   );
 
-const filtered = movimientos
-  .filter((m) => {
-    const fecha = parseFecha(m.fecha);
+const filtered = useMemo(
+  () =>
+    filtrarMovimientos(movimientos, filtros).sort((a, b) => {
+      const fechaA = valorFecha(a.fecha);
+      const fechaB = valorFecha(b.fecha);
 
-    // 🔥 TIPO (arreglado)
-    const coincideTipo =
-      !filtroTipo ||
-      (filtroTipo === "INGRESO" && Number(m.credito) > 0) ||
-      (filtroTipo === "EGRESO" && Number(m.debito) > 0);
+      if (fechaA !== fechaB) return fechaB - fechaA;
 
-    // 🔥 MES (exacto)
-    const coincideMes =
-      !filtroMes ||
-      fecha.mes === filtroMes;
-
-    // 🔥 AÑO (exacto)
-    const coincideAnio =
-      !filtroAnio ||
-      fecha.anio === filtroAnio;
-
-    // 🔥 CUIT
-    const coincideCuit =
-      !filtroCuit ||
-      (m.cuil_cuit || "")
-        .toString()
-        .includes(filtroCuit);
-
-    // 🔥 FECHA CARGA (robusta)
-    const coincideFecha =
-      !filtroFecha ||
-      valorFecha(m.fechacarga) === valorFecha(filtroFecha);
-
-    // 🔥 CONCEPTO (exacto, ahora que es un desplegable)
-    const coincideConcepto =
-      !filtroConcepto || (m.concepto || "") === filtroConcepto;
-
-    return (
-      coincideTipo &&
-      coincideMes &&
-      coincideAnio &&
-      coincideCuit &&
-      coincideFecha &&
-      coincideConcepto
-    );
-  })
-  .sort((a, b) => {
-    const fechaA = valorFecha(a.fecha);
-    const fechaB = valorFecha(b.fecha);
-
-    if (fechaA !== fechaB) return fechaB - fechaA;
-
-    return b.id - a.id;
-  });
+      return b.id - a.id;
+    }),
+  [movimientos, filtros]
+);
 return (
 
 
@@ -238,19 +149,38 @@ return (
   >
 <Box
   sx={{
-    background: "#fff",
-    borderRadius: "16px",
-    p: 2.25,
+    background: BG_PAGE,
+    borderRadius: "14px",
+    p: 1.25,
     mb: 2,
-    border: "1px solid rgba(8,59,92,0.08)",
-    boxShadow: "0 4px 14px rgba(8,59,92,0.05)",
   }}
 >
+  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: filtrosActivos ? 1 : 0 }}>
+   
+
+    {filtrosActivos && (
+      <Button
+        size="small"
+        onClick={onLimpiarFiltros}
+        startIcon={<ClearIcon sx={{ fontSize: 15 }} />}
+        sx={{
+          fontSize: 11.5,
+          fontWeight: 600,
+          textTransform: "none",
+          color: COLOR_TEAL,
+          minWidth: "auto",
+        }}
+      >
+        Limpiar filtros
+      </Button>
+    )}
+  </Box>
+
   <Box
     sx={{
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
-      gap: 1.5,
+      gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+      gap: 1,
     }}
   >
     {[
@@ -258,7 +188,7 @@ return (
         key="tipo"
         select
         value={filtroTipo}
-        onChange={(e) => setFiltroTipo(e.target.value)}
+        onChange={(e) => onFiltroChange("tipo", e.target.value)}
         size="small"
         label="Tipo"
         fullWidth
@@ -273,7 +203,7 @@ return (
         select
         label="Mes"
         value={filtroMes}
-        onChange={(e) => setFiltroMes(e.target.value)}
+        onChange={(e) => onFiltroChange("mes", e.target.value)}
         size="small"
         fullWidth
       >
@@ -293,7 +223,7 @@ return (
         select
         label="Año"
         value={filtroAnio}
-        onChange={(e) => setFiltroAnio(e.target.value)}
+        onChange={(e) => onFiltroChange("anio", e.target.value)}
         size="small"
         fullWidth
       >
@@ -310,7 +240,7 @@ return (
         select
         label="Concepto"
         value={filtroConcepto}
-        onChange={(e) => setFiltroConcepto(e.target.value)}
+        onChange={(e) => onFiltroChange("concepto", e.target.value)}
         size="small"
         fullWidth
       >
@@ -327,7 +257,7 @@ return (
         label="CUIT/CUIL"
         placeholder="Buscar por CUIT/CUIL"
         value={filtroCuit}
-        onChange={(e) => setFiltroCuit(e.target.value)}
+        onChange={(e) => onFiltroChange("cuit", e.target.value)}
         size="small"
         fullWidth
       />,
@@ -336,11 +266,16 @@ return (
         key={campo.key}
         sx={{
           "& .MuiOutlinedInput-root": {
-            borderRadius: "10px",
-            background: "#fbfdfe",
+            borderRadius: "8px",
+            background: BG_INPUT,
+            fontSize: 12.5,
             "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: COLOR_TEAL },
             "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: COLOR_TEAL },
           },
+          "& .MuiOutlinedInput-input, & .MuiSelect-select": {
+            padding: "6.5px 10px",
+          },
+          "& .MuiInputLabel-root": { fontSize: 12.5 },
           "& .MuiInputLabel-root.Mui-focused": { color: COLOR_TEAL },
         }}
       >
@@ -360,6 +295,8 @@ return (
     overflowY: "auto",
     boxShadow: "none",
     borderRadius: 2,
+    backgroundColor: BG_PAGE,
+    backgroundImage: "none",
   }}
 >
 <Table
@@ -371,21 +308,21 @@ return (
     }
   }}
 >
-    {/* 🔥 VA ACÁ (ANTES DEL HEAD) */}
+    {/* Anchos pensados para que la tabla completa entre en pantallas de notebook (~1280-1440px) sin scroll excesivo */}
     <colgroup>
-      <col style={{ width: "70px" }} />
-     
-      <col style={{ width: "50px" }} />
-      <col style={{ width: "50px" }} />
-      <col style={{ width: "75px" }} />
-      <col style={{ width: "250px" }} />
-      <col style={{ width: "200px" }} />
-      <col style={{ width: "70px" }} />
-      <col style={{ width: "80px" }} />
-      <col style={{ width: "100px" }} />
-      <col style={{ width: "170px" }} />
+      <col style={{ width: "68px" }} />
+
+      <col style={{ width: "46px" }} />
+      <col style={{ width: "46px" }} />
+      <col style={{ width: "64px" }} />
+      <col style={{ width: "190px" }} />
+      <col style={{ width: "150px" }} />
       <col style={{ width: "90px" }} />
-      <col style={{ width: "130px" }} /> <col style={{ width: "70px" }} />
+      <col style={{ width: "85px" }} />
+      <col style={{ width: "85px" }} />
+      <col style={{ width: "130px" }} />
+      <col style={{ width: "100px" }} />
+      <col style={{ width: "100px" }} /> <col style={{ width: "64px" }} />
     </colgroup>
 
         <TableHead>
@@ -411,8 +348,9 @@ return (
                 key={h}
                 sx={{
                   fontWeight: 800,
-                  color: "#fff",
-                  backgroundColor: "#0799b6",
+                  color: TEXT_FUERTE,
+                  backgroundColor: BG_INPUT,
+                  borderBottom: `2px solid ${COLOR_TEAL}`,
                   py: 0.8,
                   px: 0.8,
                   fontSize: 11,
@@ -429,24 +367,24 @@ return (
             <TableRow key={i}>
               
               {/* FECHA */}
-              <TableCell sx={{ fontSize: 11, width: 80 }}>
+              <TableCell sx={{ fontSize: 11, width: 68 }}>
                 {formatearFecha(row.fecha)}
               </TableCell>
 
-            
+
 
               {/* MES */}
-              <TableCell sx={{ fontSize: 11, width: 45 }}>
+              <TableCell sx={{ fontSize: 11, width: 46 }}>
                 {nombreMes(getMes(row.fecha))}
               </TableCell>
 
               {/* AÑO */}
-              <TableCell sx={{ fontSize: 11, width: 50 }}>
+              <TableCell sx={{ fontSize: 11, width: 46 }}>
                 {getAnio(row.fecha)}
               </TableCell>
 
               {/* TIPO */}
-              <TableCell sx={{ width: 70 }}>
+              <TableCell sx={{ width: 64 }}>
                 <Chip
                   label={row.tipo_operacion}
                   size="small"
@@ -483,20 +421,20 @@ return (
               </TableCell>
 
               {/* CUIT */}
-              <TableCell sx={{ fontSize: 11, width: 110 }}>
+              <TableCell sx={{ fontSize: 11, width: 90 }}>
                 {row.cuil_cuit}
               </TableCell>
 
               {/* DEBITO */}
-              <TableCell align="right" sx={{ width: 110 }}>
-                <Typography sx={{ color: "#dc2626", fontSize: 11 }}>
+              <TableCell align="right" sx={{ width: 85 }}>
+                <Typography sx={{ color: COLOR_RED, fontSize: 11 }}>
                   {formatearMoneda(row.debito)}
                 </Typography>
               </TableCell>
 
               {/* CREDITO */}
-              <TableCell align="right" sx={{ width: 110 }}>
-                <Typography sx={{ color: "#059669", fontSize: 11 }}>
+              <TableCell align="right" sx={{ width: 85 }}>
+                <Typography sx={{ color: COLOR_GREEN, fontSize: 11 }}>
                   {formatearMoneda(row.credito)}
                 </Typography>
               </TableCell>
@@ -514,7 +452,7 @@ return (
               </TableCell>
 
               {/* CATEGORIA */}
-              <TableCell sx={{ width: 90 }}>
+              <TableCell sx={{ width: 100 }}>
                 <Chip
                   label={row.categoria_general}
                   size="small"
@@ -528,10 +466,10 @@ return (
               {/* SALDO */}
              <TableCell
   sx={{
-    width: 120,
+    width: 100,
     fontWeight: 700,
     fontSize: 12, // 🔥 tamaño
-    color: "#034401", // 🔥 color número
+    color: COLOR_GREEN, // 🔥 color número
   }}
 >
   {formatearMoneda(row.saldo)}

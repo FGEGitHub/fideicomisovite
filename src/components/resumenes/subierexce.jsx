@@ -1,16 +1,17 @@
 import React, { useState } from "react";
 import servicionivel3 from "../../services/nivel3";
+import { useTemaColores } from "../../context/ModoOscuroContext";
 
 const headerGradient =
   "linear-gradient(90deg, #0a3b4f 0%, #0b4f6c 55%, #148D8D 100%)";
 
-const styles = {
+const crearEstilos = (c) => ({
   seccion: {
-    background: "rgba(255,255,255,0.92)",
+    background: c.BG_CARD,
     borderRadius: 22,
     marginBottom: 22,
-    boxShadow: "0 16px 36px rgba(15, 23, 42, 0.06)",
-    border: "1px solid rgba(11,79,108,0.08)",
+    boxShadow: c.SHADOW_CARD,
+    border: `1px solid ${c.BORDER}`,
     overflow: "hidden",
   },
 
@@ -22,6 +23,7 @@ const styles = {
 
   seccionBody: {
     padding: 20,
+    color: c.TEXT_FUERTE,
   },
 
   subtitulo: {
@@ -32,11 +34,11 @@ const styles = {
   },
 
   dropzone: {
-    border: "2px dashed rgba(11,79,108,0.25)",
+    border: `2px dashed ${c.BORDER_INPUT}`,
     borderRadius: 16,
     padding: 30,
     textAlign: "center",
-    background: "#f7fbfd",
+    background: c.BG_INPUT,
     cursor: "pointer",
     transition: "0.2s",
   },
@@ -49,11 +51,11 @@ const styles = {
   },
 
   kpiCard: {
-    background: "#fff",
+    background: c.BG_INPUT,
     borderRadius: 16,
     padding: 16,
-    border: "1px solid rgba(11,79,108,0.08)",
-    boxShadow: "0 10px 25px rgba(0,0,0,0.04)",
+    border: `1px solid ${c.BORDER}`,
+    boxShadow: c.SHADOW_CARD,
     position: "relative",
   },
 
@@ -67,7 +69,7 @@ const styles = {
 
   kpiLabel: {
     fontSize: 13,
-    color: "#64748B",
+    color: c.TEXT_MUTED,
     fontWeight: 700,
   },
 
@@ -75,11 +77,14 @@ const styles = {
     fontSize: 28,
     fontWeight: 800,
     marginTop: 8,
-    color: "#0F172A",
+    color: c.TEXT_FUERTE,
   },
-};
+});
 
-export default function SubirExcelMovimientos() {
+export default function SubirExcelMovimientos({ onSuccess }) {
+  const colores = useTemaColores();
+  const styles = crearEstilos(colores);
+
   const [archivo, setArchivo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [resultado, setResultado] = useState(null);
@@ -111,6 +116,7 @@ export default function SubirExcelMovimientos() {
 
       setResultado(resp);
       setArchivo(null);
+      onSuccess?.();
     } catch (e) {
       alert("Error");
     }
@@ -201,7 +207,7 @@ export default function SubirExcelMovimientos() {
   <span
     style={{
       fontSize: 13,
-      color: "#64748B",
+      color: colores.TEXT_MUTED,
       fontWeight: 500,
     }}
   >
@@ -218,7 +224,7 @@ export default function SubirExcelMovimientos() {
               style={{
                 height: 8,
                 borderRadius: 6,
-                background: "#e5e7eb",
+                background: colores.BORDER_INPUT,
               }}
             >
               <div
@@ -304,6 +310,8 @@ export default function SubirExcelMovimientos() {
 
 /* KPI */
 function KPI({ label, value, color }) {
+  const styles = crearEstilos(useTemaColores());
+
   return (
     <div style={styles.kpiCard}>
       <div style={{ ...styles.kpiAccent, background: color }} />
@@ -315,6 +323,8 @@ function KPI({ label, value, color }) {
 
 /* LISTA */
 function Modulo({ titulo, data }) {
+  const colores = useTemaColores();
+
   if (!data.length) return null;
 
   return (
@@ -326,13 +336,13 @@ function Modulo({ titulo, data }) {
           maxHeight: 200,
           overflow: "auto",
           marginTop: 8,
-          border: "1px solid #e5e7eb",
+          border: `1px solid ${colores.BORDER}`,
           borderRadius: 10,
-          background: "#fff",
+          background: colores.BG_INPUT,
         }}
       >
         {data.map((d, i) => (
-          <div key={i} style={{ padding: 8, borderBottom: "1px solid #eee" }}>
+          <div key={i} style={{ padding: 8, borderBottom: `1px solid ${colores.BORDER}` }}>
             <strong>{d.fecha}</strong> | {d.cuit} | ${d.monto}
             <div style={{ fontSize: 12 }}>{d.descripcion}</div>
           </div>
