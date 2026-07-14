@@ -9,6 +9,7 @@ import SummarizeIcon from '@mui/icons-material/Summarize';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -36,20 +37,26 @@ const menuItems = [
     path: '/nivel6/resumen1',
     accent: '#4fc3f7',
     accentSoft: 'rgba(79, 195, 247, 0.18)',
+  },{
+    text: 'Ingresos/Egresos',
+    icon: <CompareArrowsIcon fontSize="small" />,
+    path: '/nivel6/comparativo',
+    accent: '#9b8bd4',
+    accentSoft: 'rgba(155, 139, 212, 0.22)',
   },
-  {
-    text: 'Egresos',
-    icon: <TrendingDownIcon fontSize="small" />,
-    path: '/nivel6/resumen2',
-    accent: '#dc2626',
-    accentSoft: 'rgba(220, 38, 38, 0.18)',
-  },
+   
   {
     text: 'Ingresos',
     icon: <TrendingUpIcon fontSize="small" />,
     path: '/nivel6/resumen6',
     accent: '#15803d',
     accentSoft: 'rgba(21, 128, 61, 0.18)',
+  }, {
+    text: 'Egresos',
+    icon: <TrendingDownIcon fontSize="small" />,
+    path: '/nivel6/resumen2',
+    accent: '#dc2626',
+    accentSoft: 'rgba(220, 38, 38, 0.18)',
   },
   {
     text: 'Analisis General',
@@ -58,6 +65,7 @@ const menuItems = [
     accent: '#2aaad1',
     accentSoft: 'rgba(42, 170, 209, 0.22)',
   },
+
 ];
 
 export default function MenuIzq2({ children }) {

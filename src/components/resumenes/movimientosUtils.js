@@ -15,6 +15,9 @@ export const hayFiltrosActivos = (filtros) =>
   Object.values(filtros).some((valor) => Boolean(valor));
 
 // La fecha viene como "AAAA-MM-DD ..." o "DD/MM/AAAA ...", según el origen del movimiento.
+// Algunos registros (ej. importados de Excel) llegan en formato americano
+// MM/DD/AAAA en vez de DD/MM/AAAA; si el "mes" da fuera de rango pero el
+// "día" sí es un mes válido, se invierten para no perder el dato.
 export const parseFechaCorta = (fecha) => {
   if (!fecha) return { dia: "-", mes: "-", anio: "-" };
   const limpia = String(fecha).split(" ")[0];
@@ -23,7 +26,10 @@ export const parseFechaCorta = (fecha) => {
     return { dia, mes, anio };
   }
   if (limpia.includes("/")) {
-    const [dia, mes, anio] = limpia.split("/");
+    let [dia, mes, anio] = limpia.split("/");
+    if (Number(mes) > 12 && Number(dia) >= 1 && Number(dia) <= 12) {
+      [dia, mes] = [mes, dia];
+    }
     return { dia, mes, anio };
   }
   return { dia: "-", mes: "-", anio: "-" };
@@ -34,7 +40,10 @@ export const valorFecha = (fecha) => {
   const limpia = String(fecha).replace("T", " ").split(".")[0];
   if (limpia.includes("-")) return new Date(limpia).getTime();
   if (limpia.includes("/")) {
-    const [dia, mes, anio] = limpia.split(" ")[0].split("/");
+    let [dia, mes, anio] = limpia.split(" ")[0].split("/");
+    if (Number(mes) > 12 && Number(dia) >= 1 && Number(dia) <= 12) {
+      [dia, mes] = [mes, dia];
+    }
     return new Date(`${anio}-${mes}-${dia}`).getTime();
   }
   return 0;

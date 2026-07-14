@@ -363,8 +363,9 @@ const mesesDisponibles = [
                   />
                   <Tooltip
                     formatter={(value) => formatoNumero(value)}
-                    contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+                    contentStyle={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
                     labelStyle={{ color: TOOLTIP_TEXT }}
+                    itemStyle={{ color: TOOLTIP_TEXT }}
                   />
                   <Bar dataKey="monto" radius={[0, 6, 6, 0]}>
                     {principalesIngresos.map((entry) => (
@@ -407,8 +408,9 @@ const mesesDisponibles = [
                   </Pie>
                   <Tooltip
                     formatter={(value) => formatoNumero(value)}
-                    contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+                    contentStyle={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
                     labelStyle={{ color: TOOLTIP_TEXT }}
+                    itemStyle={{ color: TOOLTIP_TEXT }}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -450,8 +452,9 @@ const mesesDisponibles = [
                 <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 10, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }} width={50} />
                 <Tooltip
                   formatter={(value) => formatoNumero(value)}
-                  contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+                  contentStyle={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
                   labelStyle={{ color: TOOLTIP_TEXT }}
+                  itemStyle={{ color: TOOLTIP_TEXT }}
                 />
                 <Area
                   type="monotone"

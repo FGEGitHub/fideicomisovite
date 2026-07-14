@@ -265,6 +265,16 @@ function parseFecha(fecha) {
     return null;
   }
 
+  // Si el mes queda fuera de rango pero el día sí es un mes válido, la fecha
+  // vino en formato americano (MM/DD/AAAA) en vez de DD/MM/AAAA: se invierten.
+  if (Number(mes) > 12 && Number(dia) >= 1 && Number(dia) <= 12) {
+    [dia, mes] = [mes, dia];
+  }
+
+  if (Number(mes) < 1 || Number(mes) > 12 || Number(dia) < 1 || Number(dia) > 31) {
+    return null;
+  }
+
   const dia2 = String(dia).padStart(2, "0");
   const mes2 = String(mes).padStart(2, "0");
   const anio4 = normalizarAnio(anio);
@@ -831,8 +841,9 @@ function BarraConceptos({ data }) {
         <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 11, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }} width={55} />
         <Tooltip
           formatter={(value) => formatoNumero(value)}
-          contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+          contentStyle={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
           labelStyle={{ color: TOOLTIP_TEXT }}
+          itemStyle={{ color: TOOLTIP_TEXT }}
         />
         <Bar dataKey="monto" radius={[6, 6, 0, 0]}>
           {data.map((entry) => (
@@ -861,8 +872,9 @@ function EvolucionSaldo({ data }) {
         <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 11, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }} width={55} />
         <Tooltip
           formatter={(value) => formatoNumero(value)}
-          contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+          contentStyle={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
           labelStyle={{ color: TOOLTIP_TEXT }}
+          itemStyle={{ color: TOOLTIP_TEXT }}
         />
         <Legend wrapperStyle={{ fontSize: 12, fontFamily: FONT_FORMAL, color: TEXT_MUTED }} />
         <Area
@@ -898,8 +910,9 @@ function FlujoIngresosEgresos({ data, gradientId }) {
         <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 11, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }} width={55} />
         <Tooltip
           formatter={(value) => formatoNumero(value)}
-          contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+          contentStyle={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
           labelStyle={{ color: TOOLTIP_TEXT }}
+          itemStyle={{ color: TOOLTIP_TEXT }}
         />
         <Legend wrapperStyle={{ fontSize: 12, fontFamily: FONT_FORMAL, color: TEXT_MUTED }} />
         <Area

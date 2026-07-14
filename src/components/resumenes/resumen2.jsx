@@ -168,6 +168,7 @@ export default function DashboardFinanciero() {
 
     resp.forEach((mov) => {
       const fecha = new Date(mov.fecha);
+      if (Number.isNaN(fecha.getTime())) return; // fecha inválida/vacía: se ignora, no revienta el cálculo
 
       if (desde && fecha < new Date(desde)) return;
       if (hasta && fecha > new Date(hasta)) return;
@@ -221,6 +222,7 @@ export default function DashboardFinanciero() {
 
     resp.forEach((mov) => {
       const fecha = new Date(mov.fecha);
+      if (Number.isNaN(fecha.getTime())) return; // fecha inválida/vacía: se ignora, no revienta el cálculo
 
       if (desde && fecha < new Date(desde)) return;
       if (hasta && fecha > new Date(hasta)) return;
@@ -308,8 +310,9 @@ export default function DashboardFinanciero() {
                   />
                   <Tooltip
                     formatter={(value) => formatoNumero(value)}
-                    contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+                    contentStyle={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
                     labelStyle={{ color: TOOLTIP_TEXT }}
+                    itemStyle={{ color: TOOLTIP_TEXT }}
                   />
                   <Bar dataKey="monto" radius={[0, 6, 6, 0]}>
                     {egresos.map((entry) => (
@@ -351,8 +354,9 @@ export default function DashboardFinanciero() {
                   </Pie>
                   <Tooltip
                     formatter={(value) => formatoNumero(value)}
-                    contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+                    contentStyle={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
                     labelStyle={{ color: TOOLTIP_TEXT }}
+                    itemStyle={{ color: TOOLTIP_TEXT }}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -394,8 +398,9 @@ export default function DashboardFinanciero() {
                 <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 10, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }} width={50} />
                 <Tooltip
                   formatter={(value) => formatoNumero(value)}
-                  contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+                  contentStyle={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
                   labelStyle={{ color: TOOLTIP_TEXT }}
+                  itemStyle={{ color: TOOLTIP_TEXT }}
                 />
                 <Area
                   type="monotone"

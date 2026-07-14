@@ -27,31 +27,6 @@ const formatoNumero = (valor) => {
   }).format(numero);
 };
 
-// La fecha viene como "AAAA-MM-DD ..." o "DD/MM/AAAA ...", según el origen del movimiento.
-const parseFecha = (fecha) => {
-  if (!fecha) return null;
-  const limpia = String(fecha).replace("T", " ").split(".")[0];
-  const fechaParte = limpia.split(" ")[0];
-
-  let anio;
-  let mes;
-
-  if (fechaParte.includes("-")) {
-    [anio, mes] = fechaParte.split("-").map((p) => parseInt(p, 10));
-  } else if (fechaParte.includes("/")) {
-    const partes = fechaParte.split("/").map((p) => parseInt(p, 10));
-    mes = partes[1];
-    anio = partes[2];
-  } else {
-    return null;
-  }
-
-  if (!mes || !anio || mes < 1 || mes > 12) return null;
-  if (anio < 100) anio += 2000;
-
-  return { anio, mes };
-};
-
 function KpiCard({ icon, label, value, color, sub }) {
   const { oscuro, colores } = useModoOscuro();
   const { COLOR_NAVY, BORDER, SHADOW_CARD } = colores;
@@ -121,32 +96,22 @@ export default function MovimientosDashboard({
 }) {
   const { COLOR_NAVY, COLOR_TEAL, COLOR_GREEN, COLOR_RED } = useTemaColores();
 
-  const movimientosConFecha = useMemo(
-    () => movimientos.map((m) => ({ ...m, __fecha: parseFecha(m.fecha) })),
-    [movimientos]
-  );
-
   const kpis = useMemo(() => {
-    const totalIngresos = movimientosConFecha.reduce((acc, m) => acc + Number(m.credito || 0), 0);
-    const totalEgresos = movimientosConFecha.reduce((acc, m) => acc + Number(m.debito || 0), 0);
-
-    const ultimoMovimiento = [...movimientosConFecha].sort((a, b) => {
-      const fa = a.__fecha ? a.__fecha.anio * 100 + a.__fecha.mes : 0;
-      const fb = b.__fecha ? b.__fecha.anio * 100 + b.__fecha.mes : 0;
-      if (fa !== fb) return fb - fa;
-      return (b.id || 0) - (a.id || 0);
-    })[0];
+    const totalIngresos = movimientos.reduce((acc, m) => acc + Number(m.credito || 0), 0);
+    const totalEgresos = movimientos.reduce((acc, m) => acc + Number(m.debito || 0), 0);
 
     return {
       totalIngresos,
       totalEgresos,
-      saldoActual: Number(ultimoMovimiento?.saldo || 0),
-      cantidad: movimientosConFecha.length,
+      // Saldo = Ingresos - Egresos del conjunto actual (respeta el filtro aplicado).
+      // No es el campo "saldo" de la tabla (ese es el acumulado histórico de la cuenta).
+      saldo: totalIngresos - totalEgresos,
+      cantidad: movimientos.length,
     };
-  }, [movimientosConFecha]);
+  }, [movimientos]);
 
   const sinMovimientos = !loading && !error && totalRegistros === 0;
-  const sinResultadosFiltro = !loading && !error && totalRegistros > 0 && movimientosConFecha.length === 0;
+  const sinResultadosFiltro = !loading && !error && totalRegistros > 0 && movimientos.length === 0;
 
   return (
     <Box sx={{ mb: 0 }}>
@@ -238,9 +203,9 @@ export default function MovimientosDashboard({
           <KpiCard
             icon={<AccountBalanceWalletIcon />}
             color={COLOR_TEAL}
-            label={filtrosActivos ? "Saldo del filtro" : "Saldo actual"}
+            label="Saldo"
 
-            sub={formatoNumero(kpis.saldoActual)}
+            sub={formatoNumero(kpis.saldo)}
           />
           <KpiCard
             icon={<ReceiptLongIcon />}

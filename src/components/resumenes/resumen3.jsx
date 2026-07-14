@@ -256,8 +256,9 @@ export default function DashboardFinanciero() {
                 <YAxis tickFormatter={formatoCompacto} tick={{ fontSize: 11, fontFamily: FONT_FORMAL, fill: TEXT_MUTED }} width={55} />
                 <Tooltip
                   formatter={(value) => formatoNumero(value)}
-                  contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+                  contentStyle={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
                   labelStyle={{ color: TOOLTIP_TEXT }}
+                  itemStyle={{ color: TOOLTIP_TEXT }}
                 />
                 <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                   {datosFlujoResultado.map((entry) => (
@@ -377,8 +378,9 @@ function DonutChart({ data }) {
           </Pie>
           <Tooltip
             formatter={(value, name, props) => [formatoNumero(value), `${name} (${props.payload.percentage.toFixed(1)}%)`]}
-            contentStyle={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
+            contentStyle={{ backgroundColor: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 10, color: TOOLTIP_TEXT }}
             labelStyle={{ color: TOOLTIP_TEXT }}
+            itemStyle={{ color: TOOLTIP_TEXT }}
           />
         </RPieChart>
       </ResponsiveContainer>
