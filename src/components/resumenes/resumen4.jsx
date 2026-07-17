@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import servicionivel3 from "../../services/nivel3";
 import { useTemaColores } from "../../context/ModoOscuroContext";
+import { aFechaValida } from "./movimientosUtils";
 
 export default function DashboardFinanciero() {
 
@@ -54,7 +55,7 @@ useEffect(()=>{
 
 const traerDatos = async () => {
   const resp = await servicionivel3.traermovimientos();
-  setMovimientos(resp);
+  setMovimientos(Array.isArray(resp) ? resp : []);
 };
 
 const filtrarMovimientos = () => {
@@ -65,7 +66,7 @@ const filtrarMovimientos = () => {
 
     if(filtro.tipo === "todos") return true;
 
-    const fecha = new Date(mov.fecha);
+    const fecha = aFechaValida(mov.fecha);
 
     const mes = fecha.getMonth()+1;
     const anio = fecha.getFullYear();

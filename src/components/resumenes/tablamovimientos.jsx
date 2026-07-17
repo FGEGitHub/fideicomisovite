@@ -392,6 +392,10 @@ return (
                     height: 20,
                     fontSize: 10,
                     borderRadius: 999,
+                    fontWeight: 700,
+                    color: row.tipo_operacion === "Crédito" ? COLOR_GREEN : COLOR_RED,
+                    background:
+                      row.tipo_operacion === "Crédito" ? `${COLOR_GREEN}1f` : `${COLOR_RED}1f`,
                   }}
                 />
               </TableCell>

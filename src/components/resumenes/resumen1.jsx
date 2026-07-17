@@ -251,6 +251,9 @@ function parseFecha(fecha) {
   if (limpia.includes("/")) {
     const partes = limpia.split("/");
     if (partes.length !== 3) return null;
+    // Los registros con "/" son importados de Excel y vienen en formato
+    // ARGENTINO (DD/MM/AAAA) — confirmado contra los extractos reales del
+    // Banco Hipotecario (ej. "8/6/2026" es el 8 de junio, no el 6 de agosto).
     [dia, mes, anio] = partes;
   } else if (limpia.includes("-")) {
     const partes = limpia.split("-");
@@ -265,8 +268,8 @@ function parseFecha(fecha) {
     return null;
   }
 
-  // Si el mes queda fuera de rango pero el día sí es un mes válido, la fecha
-  // vino en formato americano (MM/DD/AAAA) en vez de DD/MM/AAAA: se invierten.
+  // Si el "mes" asumido da inválido pero el otro número sí es un mes válido,
+  // en realidad venía en MM/DD: se invierten para no perder el dato.
   if (Number(mes) > 12 && Number(dia) >= 1 && Number(dia) <= 12) {
     [dia, mes] = [mes, dia];
   }
@@ -303,28 +306,6 @@ function obtenerPeriodo(fecha) {
 function formatearFecha(fecha) {
   const parsed = parseFecha(fecha);
   return parsed ? parsed.label : "-";
-}
-
-function deduplicarMovimientos(lista) {
-  const vistos = new Set();
-
-  return lista.filter((mov) => {
-    const key = [
-      limpiarFecha(mov.fecha),
-      String(mov.cuil_cuit || "").trim(),
-      Number(mov.debito || 0).toFixed(2),
-      Number(mov.credito || 0).toFixed(2),
-      String(mov.descripcion || "").trim().toLowerCase(),
-      String(mov.nombre_razon || "").trim().toLowerCase(),
-    ].join("|");
-
-    if (vistos.has(key)) {
-      return false;
-    }
-
-    vistos.add(key);
-    return true;
-  });
 }
 
 function formatearPeriodo(periodo) {
@@ -456,9 +437,8 @@ export default function PanelFinanciero() {
     try {
       const resp = await servicionivel3.traermovimientos();
       const lista = Array.isArray(resp) ? resp : [];
-      const listaSinDuplicados = deduplicarMovimientos(lista);
 
-      setMovimientos(listaSinDuplicados);
+      setMovimientos(lista);
 
       const periodos = [
         ...new Set(lista.map((mov) => obtenerPeriodo(mov.fecha)).filter(Boolean)),

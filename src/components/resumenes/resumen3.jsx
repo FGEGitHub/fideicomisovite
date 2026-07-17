@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import servicionivel3 from "../../services/nivel3";
 import { useTemaColores } from "../../context/ModoOscuroContext";
+import { aFechaValida } from "./movimientosUtils";
 
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
@@ -72,8 +73,7 @@ export default function DashboardFinanciero() {
   const traerDatos = async () => {
     try {
       const resp = await servicionivel3.traermovimientos();
-      const lista = Array.isArray(resp) ? resp : [];
-      const movimientos = deduplicarMovimientos(lista);
+      const movimientos = Array.isArray(resp) ? resp : [];
 
       let ingresos = 0;
       let gastos = 0;
@@ -106,7 +106,7 @@ export default function DashboardFinanciero() {
       const porMes = {};
 
       movimientos.forEach((mov) => {
-        const fecha = new Date(mov.fecha);
+        const fecha = aFechaValida(mov.fecha);
         const key = `${fecha.getFullYear()}-${fecha.getMonth()}`;
 
         if (!porMes[key]) {
@@ -293,30 +293,6 @@ export default function DashboardFinanciero() {
 }
 
 /* ---------------- HELPERS (sin cambios de lógica) ---------------- */
-
-function deduplicarMovimientos(lista) {
-  const vistos = new Set();
-
-  return lista.filter((mov) => {
-    const key = [
-      normalizarFecha(mov.fecha),
-      String(mov.cuil_cuit || "").trim(),
-      Number(mov.debito || 0).toFixed(2),
-      Number(mov.credito || 0).toFixed(2),
-      String(mov.descripcion || "").trim().toLowerCase(),
-      String(mov.nombre_razon || "").trim().toLowerCase(),
-    ].join("|");
-
-    if (vistos.has(key)) return false;
-    vistos.add(key);
-    return true;
-  });
-}
-
-function normalizarFecha(fecha) {
-  if (!fecha) return "";
-  return String(fecha).replace("T", " ").split(".")[0].trim();
-}
 
 function prepararDonutData(obj) {
   const entries = Object.entries(obj)

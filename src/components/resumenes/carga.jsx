@@ -3,7 +3,7 @@ import servicionivel3 from "../../services/nivel3";
 import SubirExcelMovimientos from "./subierexce";
 import Tabla from "./tablamovimientos";
 import MovimientosDashboard from "./MovimientosDashboard";
-import { FILTROS_INICIALES, deduplicarMovimientos, filtrarMovimientos, hayFiltrosActivos } from "./movimientosUtils";
+import { FILTROS_INICIALES, filtrarMovimientos, hayFiltrosActivos } from "./movimientosUtils";
 
 import {
   Box,
@@ -56,7 +56,7 @@ export default function FormMovimiento() {
       setLoadingDatos(true);
       setErrorDatos(null);
       const data = await servicionivel3.traermovimientos();
-      setMovimientos(deduplicarMovimientos(Array.isArray(data) ? data : []));
+      setMovimientos(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error al traer movimientos:", err);
       setErrorDatos("No se pudo cargar la información de movimientos.");

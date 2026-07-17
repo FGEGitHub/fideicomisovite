@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import servicionivel3 from "../../services/nivel3";
 import { useTemaColores } from "../../context/ModoOscuroContext";
+import { aFechaValida } from "./movimientosUtils";
 
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
@@ -49,7 +50,8 @@ export default function DashboardPro() {
 
   const cargarDatos = async () => {
     try {
-      const resp = await servicionivel3.traermovimientos();
+      const respRaw = await servicionivel3.traermovimientos();
+      const resp = Array.isArray(respRaw) ? respRaw : [];
 
       const ingresosMap = {};
       const egresosMap = {};
@@ -65,7 +67,7 @@ export default function DashboardPro() {
         const debito = Number(mov.debito) || 0;
         const credito = Number(mov.credito) || 0;
 
-        const fecha = new Date(mov.fecha);
+        const fecha = aFechaValida(mov.fecha);
         const mes = fecha.toLocaleString("es-AR", { month: "short" });
 
         /* ---------------- INGRESOS ---------------- */

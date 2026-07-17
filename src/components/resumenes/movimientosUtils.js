@@ -14,10 +14,22 @@ export const FILTROS_INICIALES = {
 export const hayFiltrosActivos = (filtros) =>
   Object.values(filtros).some((valor) => Boolean(valor));
 
-// La fecha viene como "AAAA-MM-DD ..." o "DD/MM/AAAA ...", según el origen del movimiento.
-// Algunos registros (ej. importados de Excel) llegan en formato americano
-// MM/DD/AAAA en vez de DD/MM/AAAA; si el "mes" da fuera de rango pero el
-// "día" sí es un mes válido, se invierten para no perder el dato.
+// La fecha viene en dos formatos según el origen del movimiento:
+//  - "AAAA-MM-DD ..." (ISO, sin ambigüedad) para los registros que vienen directo de la base.
+//  - ".../.../AAAA" para los importados desde Excel, en formato ARGENTINO (DD/MM/AAAA)
+//    — confirmado contra los extractos reales del Banco Hipotecario (ej. "8/6/2026" es
+//    el 8 de junio, no el 6 de agosto). Si el "mes" asumido da inválido pero el otro
+//    número sí es un mes válido, se invierten (cubre los pocos registros que vinieran
+//    en MM/DD).
+const invertirSiMesInvalido = (primero, segundo) => {
+  let dia = primero;
+  let mes = segundo;
+  if (Number(mes) > 12 && Number(dia) >= 1 && Number(dia) <= 12) {
+    [dia, mes] = [mes, dia];
+  }
+  return { dia, mes };
+};
+
 export const parseFechaCorta = (fecha) => {
   if (!fecha) return { dia: "-", mes: "-", anio: "-" };
   const limpia = String(fecha).split(" ")[0];
@@ -26,10 +38,8 @@ export const parseFechaCorta = (fecha) => {
     return { dia, mes, anio };
   }
   if (limpia.includes("/")) {
-    let [dia, mes, anio] = limpia.split("/");
-    if (Number(mes) > 12 && Number(dia) >= 1 && Number(dia) <= 12) {
-      [dia, mes] = [mes, dia];
-    }
+    const [primero, segundo, anio] = limpia.split("/");
+    const { dia, mes } = invertirSiMesInvalido(primero, segundo);
     return { dia, mes, anio };
   }
   return { dia: "-", mes: "-", anio: "-" };
@@ -40,34 +50,18 @@ export const valorFecha = (fecha) => {
   const limpia = String(fecha).replace("T", " ").split(".")[0];
   if (limpia.includes("-")) return new Date(limpia).getTime();
   if (limpia.includes("/")) {
-    let [dia, mes, anio] = limpia.split(" ")[0].split("/");
-    if (Number(mes) > 12 && Number(dia) >= 1 && Number(dia) <= 12) {
-      [dia, mes] = [mes, dia];
-    }
+    const [primero, segundo, anio] = limpia.split(" ")[0].split("/");
+    const { dia, mes } = invertirSiMesInvalido(primero, segundo);
     return new Date(`${anio}-${mes}-${dia}`).getTime();
   }
   return 0;
 };
 
-// El backend puede devolver el mismo movimiento más de una vez (ej. reimportaciones de Excel).
-export const deduplicarMovimientos = (lista) => {
-  const vistos = new Set();
-
-  return lista.filter((m) => {
-    const key = [
-      String(m.fecha || "").replace("T", " ").split(".")[0].split(" ")[0].trim(),
-      String(m.cuil_cuit || "").trim(),
-      Number(m.debito || 0).toFixed(2),
-      Number(m.credito || 0).toFixed(2),
-      String(m.descripcion || "").trim().toLowerCase(),
-      String(m.nombre_razon || "").trim().toLowerCase(),
-    ].join("|");
-
-    if (vistos.has(key)) return false;
-    vistos.add(key);
-    return true;
-  });
-};
+// Reemplazo de `new Date(mov.fecha)`: el constructor nativo de Date asume
+// MM/DD/AAAA para fechas con "/", lo que rompe los registros importados de
+// Excel (formato argentino DD/MM/AAAA). Usar esto en vez de `new Date(...)`
+// en cualquier lado que agrupe/filtre movimientos por mes o rango de fechas.
+export const aFechaValida = (fecha) => new Date(valorFecha(fecha));
 
 // Mismo criterio de filtrado que usaba la tabla: se centraliza acá para que
 // las tarjetas de KPIs reflejen exactamente lo que la tabla está mostrando.

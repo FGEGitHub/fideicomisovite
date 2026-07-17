@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import servicionivel3 from "../../services/nivel3";
 import { useTemaColores } from "../../context/ModoOscuroContext";
+import { aFechaValida } from "./movimientosUtils";
 
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import ShowChartIcon from "@mui/icons-material/ShowChart";
@@ -101,7 +102,8 @@ export default function DashboardFinanciero() {
 
   const traerDatos = async () => {
     try {
-      const resp = await servicionivel3.traermovimientos();
+      const respRaw = await servicionivel3.traermovimientos();
+      const resp = Array.isArray(respRaw) ? respRaw : [];
 
       setDatosOriginales(resp);
 
@@ -131,7 +133,7 @@ export default function DashboardFinanciero() {
       mesSeleccionado === "todos"
         ? datosOriginales
         : datosOriginales.filter((mov) => {
-            const fecha = new Date(mov.fecha);
+            const fecha = aFechaValida(mov.fecha);
             const mes = String(fecha.getMonth() + 1).padStart(2, "0");
             const anio = fecha.getFullYear();
             return `${mes}-${anio}` === mesSeleccionado;
@@ -167,7 +169,7 @@ export default function DashboardFinanciero() {
     const agrupado = {};
 
     resp.forEach((mov) => {
-      const fecha = new Date(mov.fecha);
+      const fecha = aFechaValida(mov.fecha);
       if (Number.isNaN(fecha.getTime())) return; // fecha inválida/vacía: se ignora, no revienta el cálculo
 
       if (desde && fecha < new Date(desde)) return;
@@ -221,7 +223,7 @@ export default function DashboardFinanciero() {
     const agrupado = {};
 
     resp.forEach((mov) => {
-      const fecha = new Date(mov.fecha);
+      const fecha = aFechaValida(mov.fecha);
       if (Number.isNaN(fecha.getTime())) return; // fecha inválida/vacía: se ignora, no revienta el cálculo
 
       if (desde && fecha < new Date(desde)) return;
@@ -251,7 +253,7 @@ export default function DashboardFinanciero() {
   const mesesDisponibles = [
     ...new Set(
       datosOriginales.map((mov) => {
-        const fecha = new Date(mov.fecha);
+        const fecha = aFechaValida(mov.fecha);
         const mes = String(fecha.getMonth() + 1).padStart(2, "0");
         const anio = fecha.getFullYear();
         return `${mes}-${anio}`;
