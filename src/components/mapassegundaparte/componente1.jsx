@@ -97,6 +97,7 @@ const MapaConCapas = () => {
         fraccionIC: false,
         fraccionIG: false,
         invicomontana: false,
+        nuevazona: false,
     });
 
     const [subCapasActivas, setSubCapasActivas] = useState({
@@ -134,13 +135,14 @@ const zonasConfig = [
   { key: "Mensura30922U", label: "Mensura 30922-U" },
   { key: "zonapirayui", label: "Zona Pirayui" },
   { key: "zonaesperanza", label: "Zona Esperanza" },
+  { key: "nuevazona", label: "Nueva Zona" },
 ];
 const clavesZonas = [
   "ic3", "ic4", "ic42",
   "unidad-ejecutora1", "unidad-ejecutora2", "unidad-ejecutora3", "unidad-ejecutora2y3",
   "ib2", "ib3", "area5", "ib5", "area6",
   "invicoresidencial", "invico2", "invicomontana", "parc1", "parc2", "parc3", "area1", "area2", "zonaesperanza", "area4",
-  "mensura31548Unuevo", "Mensura30922U", "zonapirayui",
+  "mensura31548Unuevo", "Mensura30922U", "zonapirayui", "nuevazona",
 ];
 const todasLasZonasActivas = [...clavesZonas, "fraccionIC", "IB", "otras", "fraccionIG", "ZRU Predios La Caja", "Planificación Sección Sur"].every((key) => !!capasActivas[key]);
 const zonasActivasCount = clavesZonas.filter((k) => !!capasActivas[k]).length;
@@ -333,7 +335,7 @@ const toggleTodasLasZonas = () => {
         "PLC-F": false,
         ZPA: false
     });
-    const esAreaEspecial = ["area1", "area2", "zonaesperanza", "area4", "area5", "area6", "ic3", "ic4", "ic42", "mensura31548Unuevo", "ib5","ib2","ib3", "unidad-ejecutora1", "unidad-ejecutora2", "unidad-ejecutora3","unidad-ejecutora2y3", "zona_municipal", "invicoresidencial", "invico2", "invicomontana", "parc1", "parc2", "parc3", "zonapirayui", "Mensura30922U"].includes(nombreCapaSeleccionada
+    const esAreaEspecial = ["area1", "area2", "zonaesperanza", "area4", "area5", "area6", "ic3", "ic4", "ic42", "mensura31548Unuevo", "ib5","ib2","ib3", "unidad-ejecutora1", "unidad-ejecutora2", "unidad-ejecutora3","unidad-ejecutora2y3", "zona_municipal", "invicoresidencial", "invico2", "invicomontana", "parc1", "parc2", "parc3", "zonapirayui", "Mensura30922U", "nuevazona"].includes(nombreCapaSeleccionada
     );
     // Carga inicial de datos guardados desde backend
 
@@ -416,6 +418,14 @@ const toggleTodasLasZonas = () => {
             .then((data) => {
                 const normalizado = normalizarGeojsonConIds(data, "zonaesperanza");
                 setGeojsonData((prev) => ({ ...prev, zonaesperanza: normalizado }));
+            })
+            .catch(console.error);
+
+        fetch("/nueva%20zona.geojson")
+            .then((r) => r.json())
+            .then((data) => {
+                const normalizado = normalizarGeojsonConIds(data, "nuevazona");
+                setGeojsonData((prev) => ({ ...prev, nuevazona: normalizado }));
             })
             .catch(console.error);
 
@@ -1278,6 +1288,19 @@ useEffect(() => {
       </div>
     </div>
   </div>
+
+  {/* Nueva Zona */}
+  <div className="capa-item">
+    <label>
+      <input
+        type="checkbox"
+        checked={!!capasActivas.nuevazona}
+        onChange={() => toggleCapaPrincipal("nuevazona")}
+      />
+      <strong>Nueva Zona</strong>
+    </label>
+  </div>
+
 </div>
 
 
@@ -1677,7 +1700,7 @@ useEffect(() => {
                             )
                     )}
 
-                    {["area1", "area2", "zonaesperanza", "area4", "area5", "area6", "rutas1", "ic3", "ic4", "ic42", "mensura31548Unuevo", "invicoresidencial", "invico2", "invicomontana", "parc1", "parc2", "parc3", "ib5", "ib2", "ib3","unidad-ejecutora1","unidad-ejecutora2","unidad-ejecutora3","unidad-ejecutora2y3","zona_municipal", "Mensura30922U", "zonapirayui"].map(
+                    {["area1", "area2", "zonaesperanza", "area4", "area5", "area6", "rutas1", "ic3", "ic4", "ic42", "mensura31548Unuevo", "invicoresidencial", "invico2", "invicomontana", "parc1", "parc2", "parc3", "nuevazona", "ib5", "ib2", "ib3","unidad-ejecutora1","unidad-ejecutora2","unidad-ejecutora3","unidad-ejecutora2y3","zona_municipal", "Mensura30922U", "zonapirayui"].map(
                         (nombre) => {
                             if (!capasActivas[nombre] || !geojsonData[nombre]) return null;
 
